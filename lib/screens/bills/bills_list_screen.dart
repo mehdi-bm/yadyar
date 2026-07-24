@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/subscription.dart';
 import '../../providers/bills_provider.dart';
+import '../../theme/app_theme.dart';
 import 'payment_history_screen.dart';
 import 'subscription_edit_screen.dart';
 import 'widgets/monthly_expense_chart.dart';
@@ -28,17 +29,24 @@ class _BillsListScreenState extends State<BillsListScreen> {
 
   Future<void> _openEditor(BuildContext context, {Subscription? subscription}) {
     return Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => SubscriptionEditScreen(subscription: subscription)),
+      MaterialPageRoute(
+        builder: (_) => SubscriptionEditScreen(subscription: subscription),
+      ),
     );
   }
 
   Future<void> _openHistory(BuildContext context, Subscription subscription) {
     return Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => PaymentHistoryScreen(subscription: subscription)),
+      MaterialPageRoute(
+        builder: (_) => PaymentHistoryScreen(subscription: subscription),
+      ),
     );
   }
 
-  Future<void> _handleLongPress(BuildContext context, Subscription subscription) async {
+  Future<void> _handleLongPress(
+    BuildContext context,
+    Subscription subscription,
+  ) async {
     final provider = context.read<BillsProvider>();
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -56,8 +64,14 @@ class _BillsListScreenState extends State<BillsListScreen> {
               onTap: () => Navigator.of(ctx).pop('history'),
             ),
             ListTile(
-              leading: Icon(Icons.delete_outline, color: Theme.of(ctx).colorScheme.error),
-              title: Text('حذف', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(ctx).colorScheme.error,
+              ),
+              title: Text(
+                'حذف',
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+              ),
               onTap: () => Navigator.of(ctx).pop('delete'),
             ),
           ],
@@ -83,7 +97,10 @@ class _BillsListScreenState extends State<BillsListScreen> {
     final subscriptions = provider.subscriptions;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(AppConstants.appName),
+        actions: const [ThemeModeButton()],
+      ),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : subscriptions.isEmpty
@@ -95,7 +112,8 @@ class _BillsListScreenState extends State<BillsListScreen> {
                 for (final subscription in subscriptions)
                   SubscriptionCard(
                     subscription: subscription,
-                    onTap: () => _openEditor(context, subscription: subscription),
+                    onTap: () =>
+                        _openEditor(context, subscription: subscription),
                     onLongPress: () => _handleLongPress(context, subscription),
                     onMarkAsPaid: () => provider.markAsPaid(subscription),
                   ),
@@ -122,12 +140,18 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 64, color: theme.colorScheme.outline),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 12),
             Text(
               'هنوز اشتراک یا قبضی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../constants/app_constants.dart';
 import '../../models/subscription.dart';
 import '../../models/subscription_payment.dart';
 import '../../providers/bills_provider.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 
@@ -35,11 +35,17 @@ class PaymentHistoryScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.history, size: 64, color: theme.colorScheme.outline),
+                    Icon(
+                      Icons.history,
+                      size: 64,
+                      color: theme.colorScheme.outline,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'هنوز پرداختی برای این مورد ثبت نشده است.',
-                      style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
                     ),
                   ],
                 ),
@@ -54,7 +60,10 @@ class PaymentHistoryScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final payment = payments[index];
               return ListTile(
-                leading: Icon(Icons.check_circle_outline, color: AppConstants.successColor),
+                leading: Icon(
+                  Icons.check_circle_outline,
+                  color: context.statusColors.success,
+                ),
                 title: Text(formatTooman(payment.amount)),
                 subtitle: Text(formatJalaliDate(payment.paidDate)),
               );

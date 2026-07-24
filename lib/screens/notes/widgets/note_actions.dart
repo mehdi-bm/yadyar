@@ -15,7 +15,10 @@ Future<bool> showDeleteNoteConfirmation(BuildContext context) async {
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text('حذف', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+          child: Text(
+            'حذف',
+            style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+          ),
         ),
       ],
     ),

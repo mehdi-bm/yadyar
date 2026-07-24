@@ -5,7 +5,9 @@ Future<bool> showDeleteShoppingListConfirmation(BuildContext context) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('حذف لیست خرید'),
-      content: const Text('این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟'),
+      content: const Text(
+        'این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟',
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
@@ -13,7 +15,10 @@ Future<bool> showDeleteShoppingListConfirmation(BuildContext context) async {
         ),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text('حذف', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+          child: Text(
+            'حذف',
+            style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+          ),
         ),
       ],
     ),
@@ -40,8 +45,9 @@ Future<String?> showListNameDialog(
           controller: controller,
           autofocus: true,
           decoration: const InputDecoration(labelText: 'نام لیست'),
-          validator: (value) =>
-              (value == null || value.trim().isEmpty) ? 'نام نمی‌تواند خالی باشد' : null,
+          validator: (value) => (value == null || value.trim().isEmpty)
+              ? 'نام نمی‌تواند خالی باشد'
+              : null,
         ),
       ),
       actions: [

@@ -8,6 +8,7 @@ import '../repositories/note_repository.dart';
 import '../repositories/reminder_repository.dart';
 import '../repositories/shopping_list_repository.dart';
 import '../repositories/subscription_repository.dart';
+import '../theme/app_theme.dart';
 import '../utils/date_formatter.dart';
 import 'bills/widgets/bill_status.dart';
 import 'shopping/shopping_list_detail_screen.dart';
@@ -145,7 +146,10 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('داشبورد'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('داشبورد'),
+        actions: const [ThemeModeButton()],
+      ),
       body: RefreshIndicator(
         onRefresh: refresh,
         child: _isLoading
@@ -199,7 +203,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   else
                     ..._bills.take(4).map((bill) {
                       final status = billStatusOf(bill);
-                      final color = billStatusColor(status);
+                      final color = billStatusColor(context, status);
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(

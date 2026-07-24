@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/shopping_list.dart';
 import '../../providers/shopping_provider.dart';
+import '../../theme/app_theme.dart';
 import 'shopping_list_detail_screen.dart';
 import 'widgets/shopping_list_actions.dart';
 import 'widgets/shopping_list_card.dart';
@@ -44,8 +45,14 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
               onTap: () => Navigator.of(ctx).pop('rename'),
             ),
             ListTile(
-              leading: Icon(Icons.delete_outline, color: Theme.of(ctx).colorScheme.error),
-              title: Text('حذف', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(ctx).colorScheme.error,
+              ),
+              title: Text(
+                'حذف',
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+              ),
               onTap: () => Navigator.of(ctx).pop('delete'),
             ),
           ],
@@ -70,7 +77,9 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
 
   void _openDetail(BuildContext context, ShoppingList list) {
     Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => ShoppingListDetailScreen(shoppingList: list)),
+      MaterialPageRoute(
+        builder: (_) => ShoppingListDetailScreen(shoppingList: list),
+      ),
     );
   }
 
@@ -80,7 +89,10 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
     final lists = provider.lists;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(AppConstants.appName),
+        actions: const [ThemeModeButton()],
+      ),
       body: provider.isLoadingLists
           ? const Center(child: CircularProgressIndicator())
           : lists.isEmpty
@@ -119,12 +131,18 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 64, color: theme.colorScheme.outline),
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 12),
             Text(
               'هنوز لیست خریدی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),

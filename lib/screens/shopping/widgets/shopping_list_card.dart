@@ -30,7 +30,10 @@ class ShoppingListCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Icon(Icons.shopping_cart_outlined, color: theme.colorScheme.primary),
+              Icon(
+                Icons.shopping_cart_outlined,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -41,7 +44,10 @@ class ShoppingListCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),

@@ -4,7 +4,12 @@ import '../../../models/note.dart';
 import '../../../utils/date_formatter.dart';
 
 class NoteCard extends StatelessWidget {
-  const NoteCard({super.key, required this.note, required this.onTap, required this.onLongPress});
+  const NoteCard({
+    super.key,
+    required this.note,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   final Note note;
   final VoidCallback onTap;
@@ -30,20 +35,28 @@ class NoteCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       note.title.isEmpty ? '(بدون عنوان)' : note.title,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (note.isPinned)
-                    Icon(Icons.push_pin, size: 20, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.push_pin,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
                 ],
               ),
               if (note.content.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
                   note.content,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -61,7 +74,9 @@ class NoteCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     formatJalaliDate(note.updatedAt),
-                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
                   ),
                 ],
               ),

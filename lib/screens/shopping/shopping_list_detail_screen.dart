@@ -12,7 +12,8 @@ class ShoppingListDetailScreen extends StatefulWidget {
   final ShoppingList shoppingList;
 
   @override
-  State<ShoppingListDetailScreen> createState() => _ShoppingListDetailScreenState();
+  State<ShoppingListDetailScreen> createState() =>
+      _ShoppingListDetailScreenState();
 }
 
 class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
@@ -20,7 +21,9 @@ class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<ShoppingProvider>().loadItems(widget.shoppingList.id!);
+      if (mounted) {
+        context.read<ShoppingProvider>().loadItems(widget.shoppingList.id!);
+      }
     });
   }
 
@@ -112,12 +115,18 @@ class _EmptyItemsState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.playlist_add_outlined, size: 64, color: theme.colorScheme.outline),
+            Icon(
+              Icons.playlist_add_outlined,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 12),
             Text(
               'این لیست هنوز آیتمی ندارد.\nبرای شروع، دکمه + را بزنید.',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),

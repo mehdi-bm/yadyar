@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../constants/app_constants.dart';
 import '../../../models/subscription.dart';
+import '../../../theme/app_theme.dart';
 
 enum BillStatus { paid, dueSoon, overdue }
 
@@ -16,7 +16,9 @@ BillStatus billStatusOf(Subscription subscription) {
     subscription.dueDate.day,
   );
 
-  return dueDateOnly.isBefore(todayOnly) ? BillStatus.overdue : BillStatus.dueSoon;
+  return dueDateOnly.isBefore(todayOnly)
+      ? BillStatus.overdue
+      : BillStatus.dueSoon;
 }
 
 String billStatusLabel(BillStatus status) {
@@ -30,13 +32,13 @@ String billStatusLabel(BillStatus status) {
   }
 }
 
-Color billStatusColor(BillStatus status) {
+Color billStatusColor(BuildContext context, BillStatus status) {
   switch (status) {
     case BillStatus.paid:
-      return AppConstants.successColor;
+      return context.statusColors.success;
     case BillStatus.dueSoon:
-      return AppConstants.secondaryColor;
+      return context.statusColors.warning;
     case BillStatus.overdue:
-      return AppConstants.errorColor;
+      return context.statusColors.error;
   }
 }

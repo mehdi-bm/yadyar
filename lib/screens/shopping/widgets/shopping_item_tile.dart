@@ -29,7 +29,9 @@ class ShoppingItemTile extends StatelessWidget {
               )
             : theme.textTheme.bodyLarge,
       ),
-      subtitle: (item.quantity == null || item.quantity!.isEmpty) ? null : Text(item.quantity!),
+      subtitle: (item.quantity == null || item.quantity!.isEmpty)
+          ? null
+          : Text(item.quantity!),
       trailing: IconButton(
         icon: const Icon(Icons.close, size: 20),
         tooltip: 'حذف آیتم',

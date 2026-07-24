@@ -46,7 +46,9 @@ class _AddItemSheetState extends State<_AddItemSheet> {
     await context.read<ShoppingProvider>().addItem(
       name: _nameController.text.trim(),
       category: category,
-      quantity: _quantityController.text.trim().isEmpty ? null : _quantityController.text.trim(),
+      quantity: _quantityController.text.trim().isEmpty
+          ? null
+          : _quantityController.text.trim(),
     );
 
     if (mounted) Navigator.of(context).pop();
@@ -72,16 +74,28 @@ class _AddItemSheetState extends State<_AddItemSheet> {
             TextFormField(
               controller: _nameController,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'نام آیتم', border: OutlineInputBorder()),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'نام نمی‌تواند خالی باشد' : null,
+              decoration: const InputDecoration(
+                labelText: 'نام آیتم',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'نام نمی‌تواند خالی باشد'
+                  : null,
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _selectedCategory,
-              decoration: const InputDecoration(labelText: 'دسته‌بندی', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'دسته‌بندی',
+                border: OutlineInputBorder(),
+              ),
               items: AppConstants.shoppingItemCategories
-                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) => setState(() => _selectedCategory = value!),
             ),
@@ -93,7 +107,9 @@ class _AddItemSheetState extends State<_AddItemSheet> {
                   labelText: 'عنوان دسته‌بندی',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => _selectedCategory == _otherCategory && (value == null || value.trim().isEmpty)
+                validator: (value) =>
+                    _selectedCategory == _otherCategory &&
+                        (value == null || value.trim().isEmpty)
                     ? 'عنوان دسته‌بندی را وارد کنید'
                     : null,
               ),
@@ -109,7 +125,10 @@ class _AddItemSheetState extends State<_AddItemSheet> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(onPressed: _submit, child: const Text('افزودن')),
+              child: FilledButton(
+                onPressed: _submit,
+                child: const Text('افزودن'),
+              ),
             ),
           ],
         ),

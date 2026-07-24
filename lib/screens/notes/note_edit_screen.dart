@@ -40,7 +40,9 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     _isPinned = note?.isPinned ?? false;
 
     if (note?.id != null) {
-      context.read<NotesProvider>().getReminderForNote(note!.id!).then((reminder) {
+      context.read<NotesProvider>().getReminderForNote(note!.id!).then((
+        reminder,
+      ) {
         if (!mounted || reminder == null) return;
         setState(() {
           _reminderEnabled = true;
@@ -65,7 +67,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     final title = _titleController.text.trim();
     final provider = context.read<NotesProvider>();
     final reminder = _reminderEnabled
-        ? Reminder(title: title, dateTime: _reminderDateTime, repeatType: _repeatType)
+        ? Reminder(
+            title: title,
+            dateTime: _reminderDateTime,
+            repeatType: _repeatType,
+          )
         : null;
 
     if (_isEditing) {
@@ -112,7 +118,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               tooltip: 'حذف یادداشت',
               onPressed: _delete,
             ),
-          IconButton(icon: const Icon(Icons.check), tooltip: 'ذخیره', onPressed: _save),
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: 'ذخیره',
+            onPressed: _save,
+          ),
         ],
       ),
       body: Form(
@@ -122,9 +132,13 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'عنوان', border: OutlineInputBorder()),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'عنوان نمی‌تواند خالی باشد' : null,
+              decoration: const InputDecoration(
+                labelText: 'عنوان',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'عنوان نمی‌تواند خالی باشد'
+                  : null,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
@@ -156,7 +170,8 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                     .map(
                       (tag) => ActionChip(
                         label: Text(tag),
-                        onPressed: () => setState(() => _tagController.text = tag),
+                        onPressed: () =>
+                            setState(() => _tagController.text = tag),
                       ),
                     )
                     .toList(),
@@ -174,9 +189,12 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               enabled: _reminderEnabled,
               dateTime: _reminderDateTime,
               repeatType: _repeatType,
-              onEnabledChanged: (value) => setState(() => _reminderEnabled = value),
-              onDateTimeChanged: (value) => setState(() => _reminderDateTime = value),
-              onRepeatTypeChanged: (value) => setState(() => _repeatType = value),
+              onEnabledChanged: (value) =>
+                  setState(() => _reminderEnabled = value),
+              onDateTimeChanged: (value) =>
+                  setState(() => _reminderDateTime = value),
+              onRepeatTypeChanged: (value) =>
+                  setState(() => _repeatType = value),
             ),
           ],
         ),

@@ -34,8 +34,12 @@ class ReminderFormSection extends StatelessWidget {
     final pickedDate = await showPersianDatePicker(
       context: context,
       initialDate: Jalali.fromDateTime(dateTime),
-      firstDate: Jalali.fromDateTime(DateTime.now().subtract(const Duration(days: 1))),
-      lastDate: Jalali.fromDateTime(DateTime.now().add(const Duration(days: 365 * 5))),
+      firstDate: Jalali.fromDateTime(
+        DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      lastDate: Jalali.fromDateTime(
+        DateTime.now().add(const Duration(days: 365 * 5)),
+      ),
     );
     if (pickedDate == null || !context.mounted) return;
 
@@ -46,7 +50,9 @@ class ReminderFormSection extends StatelessWidget {
     if (time == null) return;
 
     final date = pickedDate.toDateTime();
-    onDateTimeChanged(DateTime(date.year, date.month, date.day, time.hour, time.minute));
+    onDateTimeChanged(
+      DateTime(date.year, date.month, date.day, time.hour, time.minute),
+    );
   }
 
   @override

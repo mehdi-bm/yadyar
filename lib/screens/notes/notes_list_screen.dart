@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/note.dart';
 import '../../providers/notes_provider.dart';
+import '../../theme/app_theme.dart';
 import 'note_edit_screen.dart';
 import 'widgets/note_actions.dart';
 import 'widgets/note_card.dart';
@@ -34,9 +35,9 @@ class _NotesListScreenState extends State<NotesListScreen> {
   }
 
   Future<void> _openEditor(BuildContext context, {Note? note}) {
-    return Navigator.of(context).push<void>(
-      MaterialPageRoute(builder: (_) => NoteEditScreen(note: note)),
-    );
+    return Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => NoteEditScreen(note: note)));
   }
 
   Future<void> _handleLongPress(BuildContext context, Note note) async {
@@ -52,13 +53,21 @@ class _NotesListScreenState extends State<NotesListScreen> {
               onTap: () => Navigator.of(ctx).pop('edit'),
             ),
             ListTile(
-              leading: Icon(note.isPinned ? Icons.push_pin_outlined : Icons.push_pin),
+              leading: Icon(
+                note.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
+              ),
               title: Text(note.isPinned ? 'لغو سنجاق' : 'سنجاق کردن'),
               onTap: () => Navigator.of(ctx).pop('pin'),
             ),
             ListTile(
-              leading: Icon(Icons.delete_outline, color: Theme.of(ctx).colorScheme.error),
-              title: Text('حذف', style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(ctx).colorScheme.error,
+              ),
+              title: Text(
+                'حذف',
+                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+              ),
               onTap: () => Navigator.of(ctx).pop('delete'),
             ),
           ],
@@ -83,10 +92,14 @@ class _NotesListScreenState extends State<NotesListScreen> {
     final provider = context.watch<NotesProvider>();
     final notes = provider.filteredNotes;
     final tags = provider.allTags;
-    final isFiltering = provider.searchQuery.isNotEmpty || provider.selectedTag != null;
+    final isFiltering =
+        provider.searchQuery.isNotEmpty || provider.selectedTag != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(AppConstants.appName),
+        actions: const [ThemeModeButton()],
+      ),
       body: Column(
         children: [
           Padding(
@@ -105,7 +118,9 @@ class _NotesListScreenState extends State<NotesListScreen> {
                           provider.setSearchQuery('');
                         },
                       ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 isDense: true,
               ),
               onChanged: provider.setSearchQuery,
@@ -173,14 +188,20 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.note_alt_outlined, size: 64, color: theme.colorScheme.outline),
+            Icon(
+              Icons.note_alt_outlined,
+              size: 64,
+              color: theme.colorScheme.outline,
+            ),
             const SizedBox(height: 12),
             Text(
               isFiltering
                   ? 'یادداشتی با این مشخصات پیدا نشد.'
                   : 'هنوز یادداشتی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),

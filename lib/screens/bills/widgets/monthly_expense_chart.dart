@@ -12,7 +12,10 @@ class MonthlyExpenseChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final maxTotal = data.fold<double>(0, (max, e) => e.total > max ? e.total : max);
+    final maxTotal = data.fold<double>(
+      0,
+      (max, e) => e.total > max ? e.total : max,
+    );
     final maxY = maxTotal <= 0 ? 1.0 : maxTotal * 1.2;
 
     return Card(
@@ -24,7 +27,10 @@ class MonthlyExpenseChart extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.only(right: 8, bottom: 8),
-              child: Text('هزینه ماهانه (۶ ماه اخیر)', style: theme.textTheme.titleSmall),
+              child: Text(
+                'هزینه ماهانه (۶ ماه اخیر)',
+                style: theme.textTheme.titleSmall,
+              ),
             ),
             SizedBox(
               height: 160,
@@ -35,19 +41,30 @@ class MonthlyExpenseChart extends StatelessWidget {
                   gridData: const FlGridData(show: false),
                   borderData: FlBorderData(show: false),
                   titlesData: FlTitlesData(
-                    leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 28,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
-                          if (index < 0 || index >= data.length) return const SizedBox.shrink();
+                          if (index < 0 || index >= data.length) {
+                            return const SizedBox.shrink();
+                          }
                           return Padding(
                             padding: const EdgeInsets.only(top: 6),
-                            child: Text(data[index].label, style: theme.textTheme.labelSmall),
+                            child: Text(
+                              data[index].label,
+                              style: theme.textTheme.labelSmall,
+                            ),
                           );
                         },
                       ),
@@ -72,7 +89,9 @@ class MonthlyExpenseChart extends StatelessWidget {
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
                         return BarTooltipItem(
                           rod.toY.toStringAsFixed(0),
-                          theme.textTheme.labelSmall!.copyWith(color: Colors.white),
+                          theme.textTheme.labelSmall!.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          ),
                         );
                       },
                     ),

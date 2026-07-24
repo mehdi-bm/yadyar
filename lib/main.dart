@@ -12,45 +12,50 @@ import 'screens/dashboard_screen.dart';
 import 'screens/notes/notes_list_screen.dart';
 import 'screens/shopping/shopping_lists_screen.dart';
 import 'services/notification_service.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.instance.initialize();
   await NotificationService.instance.requestPermissionOnFirstLaunch();
-  runApp(const YadyarApp());
+  final themeController = await ThemeController.load();
+  runApp(YadyarApp(themeController: themeController));
 }
 
 class YadyarApp extends StatelessWidget {
-  const YadyarApp({super.key});
+  const YadyarApp({super.key, this.themeController});
+
+  final ThemeController? themeController;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => themeController ?? ThemeController(),
+        ),
         ChangeNotifierProvider(create: (_) => NotesProvider()),
         ChangeNotifierProvider(create: (_) => BillsProvider()),
         ChangeNotifierProvider(create: (_) => ShoppingProvider()),
       ],
-      child: MaterialApp(
-        title: AppConstants.appName,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppConstants.primaryColor,
-          ),
-          scaffoldBackgroundColor: AppConstants.backgroundColor,
+      child: Consumer<ThemeController>(
+        builder: (context, controller, _) => MaterialApp(
+          title: AppConstants.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: controller.themeMode,
+          locale: const Locale('fa', 'IR'),
+          supportedLocales: const [Locale('fa', 'IR')],
+          localizationsDelegates: const [
+            PersianMaterialLocalizations.delegate,
+            PersianCupertinoLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: const HomeScreen(),
         ),
-        locale: const Locale('fa', 'IR'),
-        supportedLocales: const [Locale('fa', 'IR')],
-        localizationsDelegates: const [
-          PersianMaterialLocalizations.delegate,
-          PersianCupertinoLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: const HomeScreen(),
       ),
     );
   }
