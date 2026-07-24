@@ -8,6 +8,7 @@ import 'providers/bills_provider.dart';
 import 'providers/notes_provider.dart';
 import 'providers/shopping_provider.dart';
 import 'screens/bills/bills_list_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/notes/notes_list_screen.dart';
 import 'screens/shopping/shopping_lists_screen.dart';
 import 'services/notification_service.dart';
@@ -64,24 +65,29 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final _dashboardKey = GlobalKey<DashboardScreenState>();
 
   // هر تب Scaffold و AppBar مخصوص به خودش را دارد (نیاز صفحه یادداشت‌ها به
   // نوار جستجوی داخل بدنه، و نیاز آینده صفحات دیگر به اکشن‌های AppBar خاص خودشان).
-  static const List<Widget> _tabs = [
-    _PlaceholderTab(title: 'داشبورد'),
-    NotesListScreen(),
-    BillsListScreen(),
-    ShoppingListsScreen(),
-  ];
+  void _selectTab(int index) {
+    setState(() => _currentIndex = index);
+    if (index == 0) _dashboardKey.currentState?.refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final tabs = [
+      DashboardScreen(key: _dashboardKey, onNavigateToTab: _selectTab),
+      const NotesListScreen(),
+      const BillsListScreen(),
+      const ShoppingListsScreen(),
+    ];
     return Scaffold(
-      body: _tabs[_currentIndex],
+      body: tabs[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: _selectTab,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
@@ -105,23 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.appName),
-        centerTitle: true,
-      ),
-      body: Center(child: Text(title)),
     );
   }
 }
