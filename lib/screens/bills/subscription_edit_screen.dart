@@ -51,14 +51,18 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     _reminderDaysController = TextEditingController(
       text: (subscription?.reminderDaysBefore ?? 3).toString(),
     );
-    _dueDate = subscription?.dueDate ?? DateTime.now().add(const Duration(days: 30));
+    _dueDate =
+        subscription?.dueDate ?? DateTime.now().add(const Duration(days: 30));
     _repeatType = subscription?.repeatType ?? SubscriptionRepeatType.monthly;
 
     final currentCategory = subscription?.category;
     _selectedCategory =
-        (currentCategory != null && AppConstants.subscriptionCategories.contains(currentCategory))
+        (currentCategory != null &&
+            AppConstants.subscriptionCategories.contains(currentCategory))
         ? currentCategory
-        : (currentCategory == null || currentCategory.isEmpty ? AppConstants.subscriptionCategories.first : _otherCategory);
+        : (currentCategory == null || currentCategory.isEmpty
+              ? AppConstants.subscriptionCategories.first
+              : _otherCategory);
     _customCategoryController = TextEditingController(
       text: _selectedCategory == _otherCategory ? (currentCategory ?? '') : '',
     );
@@ -77,10 +81,31 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     final picked = await showPersianDatePicker(
       context: context,
       initialDate: Jalali.fromDateTime(_dueDate),
-      firstDate: Jalali.fromDateTime(DateTime.now().subtract(const Duration(days: 365))),
-      lastDate: Jalali.fromDateTime(DateTime.now().add(const Duration(days: 365 * 5))),
+      firstDate: Jalali.fromDateTime(
+        DateTime.now().subtract(const Duration(days: 365)),
+      ),
+      lastDate: Jalali.fromDateTime(
+        DateTime.now().add(const Duration(days: 365 * 5)),
+      ),
     );
-    if (picked != null) setState(() => _dueDate = picked.toDateTime());
+    if (picked == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_dueDate),
+    );
+    if (time == null) return;
+
+    final date = picked.toDateTime();
+    setState(() {
+      _dueDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
   }
 
   Future<void> _save() async {
@@ -114,7 +139,9 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
   Future<void> _delete() async {
     final confirmed = await showDeleteSubscriptionConfirmation(context);
     if (!confirmed || !mounted) return;
-    await context.read<BillsProvider>().deleteSubscription(widget.subscription!.id!);
+    await context.read<BillsProvider>().deleteSubscription(
+      widget.subscription!.id!,
+    );
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -130,7 +157,11 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
               tooltip: 'حذف',
               onPressed: _delete,
             ),
-          IconButton(icon: const Icon(Icons.check), tooltip: 'ذخیره', onPressed: _save),
+          IconButton(
+            icon: const Icon(Icons.check),
+            tooltip: 'ذخیره',
+            onPressed: _save,
+          ),
         ],
       ),
       body: Form(
@@ -140,9 +171,13 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
           children: [
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'عنوان', border: OutlineInputBorder()),
-              validator: (value) =>
-                  (value == null || value.trim().isEmpty) ? 'عنوان نمی‌تواند خالی باشد' : null,
+              decoration: const InputDecoration(
+                labelText: 'عنوان',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'عنوان نمی‌تواند خالی باشد'
+                  : null,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
@@ -155,16 +190,26 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
               keyboardType: TextInputType.number,
               validator: (value) {
                 final parsed = double.tryParse((value ?? '').trim());
-                if (parsed == null || parsed <= 0) return 'مبلغ معتبر وارد کنید';
+                if (parsed == null || parsed <= 0) {
+                  return 'مبلغ معتبر وارد کنید';
+                }
                 return null;
               },
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _selectedCategory,
-              decoration: const InputDecoration(labelText: 'دسته‌بندی', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'دسته‌بندی',
+                border: OutlineInputBorder(),
+              ),
               items: AppConstants.subscriptionCategories
-                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .map(
+                    (category) => DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) => setState(() => _selectedCategory = value!),
             ),
@@ -176,7 +221,9 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
                   labelText: 'عنوان دسته‌بندی',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => _selectedCategory == _otherCategory && (value == null || value.trim().isEmpty)
+                validator: (value) =>
+                    _selectedCategory == _otherCategory &&
+                        (value == null || value.trim().isEmpty)
                     ? 'عنوان دسته‌بندی را وارد کنید'
                     : null,
               ),
@@ -186,11 +233,13 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
               contentPadding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
-                side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
               ),
               leading: const Icon(Icons.event_outlined),
               title: const Text('تاریخ سررسید'),
-              subtitle: Text(formatJalaliDate(_dueDate)),
+              subtitle: Text(formatJalaliDateTime(_dueDate)),
               trailing: const Icon(Icons.edit_calendar_outlined),
               onTap: _pickDueDate,
             ),

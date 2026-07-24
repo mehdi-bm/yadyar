@@ -7,7 +7,8 @@ plugins {
 android {
     namespace = "com.yadyar.yadyar_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Use the complete side-by-side NDK already installed on this machine.
+    ndkVersion = "29.0.13599879"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

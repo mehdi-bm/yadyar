@@ -4,14 +4,21 @@ import '../models/note.dart';
 import '../models/reminder.dart';
 import '../repositories/note_repository.dart';
 import '../repositories/reminder_repository.dart';
+import '../services/notification_service.dart';
 
 class NotesProvider extends ChangeNotifier {
-  NotesProvider({NoteRepository? noteRepository, ReminderRepository? reminderRepository})
-    : _noteRepository = noteRepository ?? NoteRepository(),
-      _reminderRepository = reminderRepository ?? ReminderRepository();
+  NotesProvider({
+    NoteRepository? noteRepository,
+    ReminderRepository? reminderRepository,
+    NotificationService? notificationService,
+  }) : _noteRepository = noteRepository ?? NoteRepository(),
+       _reminderRepository = reminderRepository ?? ReminderRepository(),
+       _notificationService =
+           notificationService ?? NotificationService.instance;
 
   final NoteRepository _noteRepository;
   final ReminderRepository _reminderRepository;
+  final NotificationService _notificationService;
 
   List<Note> _notes = [];
   bool _isLoading = false;
@@ -23,7 +30,11 @@ class NotesProvider extends ChangeNotifier {
   String? get selectedTag => _selectedTag;
 
   List<String> get allTags {
-    final tags = _notes.map((note) => note.tag).where((tag) => tag.isNotEmpty).toSet().toList();
+    final tags = _notes
+        .map((note) => note.tag)
+        .where((tag) => tag.isNotEmpty)
+        .toSet()
+        .toList();
     tags.sort();
     return tags;
   }
@@ -88,7 +99,11 @@ class NotesProvider extends ChangeNotifier {
       ),
     );
     if (reminder != null) {
-      await _reminderRepository.insert(reminder.copyWith(noteId: noteId));
+      final savedReminder = reminder.copyWith(noteId: noteId);
+      final reminderId = await _reminderRepository.insert(savedReminder);
+      await _notificationService.scheduleReminderNotification(
+        savedReminder.copyWith(id: reminderId),
+      );
     }
     await loadNotes();
   }
@@ -99,10 +114,15 @@ class NotesProvider extends ChangeNotifier {
     // در این فرم هر یادداشت حداکثر یک یادآور دارد: قدیمی پاک و در صورت نیاز جدید درج می‌شود.
     final existingReminders = await _reminderRepository.getByNoteId(note.id!);
     for (final existing in existingReminders) {
+      await _notificationService.cancelReminder(existing.id!);
       await _reminderRepository.delete(existing.id!);
     }
     if (reminder != null) {
-      await _reminderRepository.insert(reminder.copyWith(id: null, noteId: note.id));
+      final savedReminder = reminder.copyWith(id: null, noteId: note.id);
+      final reminderId = await _reminderRepository.insert(savedReminder);
+      await _notificationService.scheduleReminderNotification(
+        savedReminder.copyWith(id: reminderId),
+      );
     }
     await loadNotes();
   }
@@ -110,6 +130,7 @@ class NotesProvider extends ChangeNotifier {
   Future<void> deleteNote(int noteId) async {
     final reminders = await _reminderRepository.getByNoteId(noteId);
     for (final reminder in reminders) {
+      await _notificationService.cancelReminder(reminder.id!);
       await _reminderRepository.delete(reminder.id!);
     }
     await _noteRepository.delete(noteId);
@@ -117,7 +138,9 @@ class NotesProvider extends ChangeNotifier {
   }
 
   Future<void> togglePin(Note note) async {
-    await _noteRepository.update(note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now()));
+    await _noteRepository.update(
+      note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now()),
+    );
     await loadNotes();
   }
 }

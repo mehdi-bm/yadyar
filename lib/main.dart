@@ -10,8 +10,12 @@ import 'providers/shopping_provider.dart';
 import 'screens/bills/bills_list_screen.dart';
 import 'screens/notes/notes_list_screen.dart';
 import 'screens/shopping/shopping_lists_screen.dart';
+import 'services/notification_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.initialize();
+  await NotificationService.instance.requestPermissionOnFirstLaunch();
   runApp(const YadyarApp());
 }
 
@@ -31,7 +35,9 @@ class YadyarApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: AppConstants.primaryColor),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: AppConstants.primaryColor,
+          ),
           scaffoldBackgroundColor: AppConstants.backgroundColor,
         ),
         locale: const Locale('fa', 'IR'),
@@ -111,7 +117,10 @@ class _PlaceholderTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppConstants.appName), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(AppConstants.appName),
+        centerTitle: true,
+      ),
       body: Center(child: Text(title)),
     );
   }

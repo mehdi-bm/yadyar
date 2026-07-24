@@ -4,6 +4,7 @@ import 'package:shamsi_date/shamsi_date.dart';
 import '../models/subscription.dart';
 import '../models/subscription_payment.dart';
 import '../repositories/subscription_repository.dart';
+import '../services/notification_service.dart';
 
 class MonthlyExpense {
   const MonthlyExpense({required this.label, required this.total});
@@ -13,10 +14,16 @@ class MonthlyExpense {
 }
 
 class BillsProvider extends ChangeNotifier {
-  BillsProvider({SubscriptionRepository? subscriptionRepository})
-    : _subscriptionRepository = subscriptionRepository ?? SubscriptionRepository();
+  BillsProvider({
+    SubscriptionRepository? subscriptionRepository,
+    NotificationService? notificationService,
+  }) : _subscriptionRepository =
+           subscriptionRepository ?? SubscriptionRepository(),
+       _notificationService =
+           notificationService ?? NotificationService.instance;
 
   final SubscriptionRepository _subscriptionRepository;
+  final NotificationService _notificationService;
 
   List<Subscription> _subscriptions = [];
   List<SubscriptionPayment> _payments = [];
@@ -30,13 +37,17 @@ class BillsProvider extends ChangeNotifier {
   /// مجموع هزینه پرداخت‌شده در هر یک از ۶ ماه شمسی اخیر (شامل ماه جاری).
   List<MonthlyExpense> get monthlyExpenses {
     final currentMonth = Jalali.fromDateTime(DateTime.now());
-    final months = List.generate(6, (i) => _addJalaliMonths(currentMonth, i - 5));
+    final months = List.generate(
+      6,
+      (i) => _addJalaliMonths(currentMonth, i - 5),
+    );
 
     return months.map((month) {
       final total = _payments
           .where((payment) {
             final paidMonth = Jalali.fromDateTime(payment.paidDate);
-            return paidMonth.year == month.year && paidMonth.month == month.month;
+            return paidMonth.year == month.year &&
+                paidMonth.month == month.month;
           })
           .fold<double>(0, (sum, payment) => sum + payment.amount);
       return MonthlyExpense(label: month.formatter.mN, total: total);
@@ -67,16 +78,21 @@ class BillsProvider extends ChangeNotifier {
   }
 
   Future<void> addSubscription(Subscription subscription) async {
-    await _subscriptionRepository.insert(subscription);
+    final id = await _subscriptionRepository.insert(subscription);
+    await _notificationService.scheduleSubscriptionReminder(
+      subscription.copyWith(id: id),
+    );
     await loadSubscriptions();
   }
 
   Future<void> updateSubscription(Subscription subscription) async {
     await _subscriptionRepository.update(subscription);
+    await _notificationService.scheduleSubscriptionReminder(subscription);
     await loadSubscriptions();
   }
 
   Future<void> deleteSubscription(int id) async {
+    await _notificationService.cancelReminder(id, isSubscription: true);
     await _subscriptionRepository.delete(id);
     await loadSubscriptions();
   }
@@ -87,7 +103,11 @@ class BillsProvider extends ChangeNotifier {
   Future<void> markAsPaid(Subscription subscription) async {
     final now = DateTime.now();
     await _subscriptionRepository.insertPayment(
-      SubscriptionPayment(subscriptionId: subscription.id!, paidDate: now, amount: subscription.amount),
+      SubscriptionPayment(
+        subscriptionId: subscription.id!,
+        paidDate: now,
+        amount: subscription.amount,
+      ),
     );
 
     final isRecurring = subscription.repeatType != SubscriptionRepeatType.once;
@@ -99,15 +119,35 @@ class BillsProvider extends ChangeNotifier {
           : subscription.dueDate,
     );
     await _subscriptionRepository.update(updated);
+    if (isRecurring) {
+      await _notificationService.scheduleSubscriptionReminder(updated);
+    } else {
+      await _notificationService.cancelReminder(
+        subscription.id!,
+        isSubscription: true,
+      );
+    }
     await loadSubscriptions();
   }
 
   DateTime _nextDueDate(DateTime current, SubscriptionRepeatType repeatType) {
     switch (repeatType) {
       case SubscriptionRepeatType.monthly:
-        return DateTime(current.year, current.month + 1, current.day, current.hour, current.minute);
+        return DateTime(
+          current.year,
+          current.month + 1,
+          current.day,
+          current.hour,
+          current.minute,
+        );
       case SubscriptionRepeatType.yearly:
-        return DateTime(current.year + 1, current.month, current.day, current.hour, current.minute);
+        return DateTime(
+          current.year + 1,
+          current.month,
+          current.day,
+          current.hour,
+          current.minute,
+        );
       case SubscriptionRepeatType.once:
         return current;
     }
