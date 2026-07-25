@@ -1,29 +1,13 @@
 import 'package:flutter/material.dart';
 
-Future<bool> showDeleteShoppingListConfirmation(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('حذف لیست خرید'),
-      content: const Text(
-        'این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('انصراف'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text(
-            'حذف',
-            style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-          ),
-        ),
-      ],
-    ),
+import '../../../widgets/confirm_dialog.dart';
+
+Future<bool> showDeleteShoppingListConfirmation(BuildContext context) {
+  return showConfirmDialog(
+    context,
+    title: 'حذف لیست خرید',
+    message: 'این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟',
   );
-  return confirmed ?? false;
 }
 
 /// دیالوگ ساده برای گرفتن نام لیست خرید (هم برای افزودن و هم ویرایش نام).

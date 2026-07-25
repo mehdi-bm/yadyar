@@ -74,12 +74,14 @@ class AppTheme {
       error: statusColors.error,
     );
     final typography = Typography.material2021();
-    final textTheme = brightness == Brightness.dark
-        ? typography.white
-        : typography.black;
+    final textTheme = (brightness == Brightness.dark
+            ? typography.white
+            : typography.black)
+        .apply(fontFamily: 'Vazirmatn');
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: 'Vazirmatn',
       materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: scheme,
       textTheme: textTheme.copyWith(
@@ -140,13 +142,29 @@ class AppTheme {
         side: BorderSide(color: scheme.outlineVariant),
       ),
       dividerTheme: DividerThemeData(color: scheme.outlineVariant),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        type: BottomNavigationBarType.fixed,
-        elevation: 8,
+      navigationBarTheme: NavigationBarThemeData(
+        elevation: 3,
         backgroundColor: surface,
-        selectedItemColor: scheme.primary,
-        unselectedItemColor: scheme.onSurfaceVariant,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        indicatorColor: scheme.primaryContainer,
+        surfaceTintColor: scheme.surfaceTint,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? scheme.onSurface
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? scheme.onPrimaryContainer
+                : scheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

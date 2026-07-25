@@ -7,6 +7,7 @@ import '../../providers/bills_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
+import '../../widgets/empty_state.dart';
 
 class PaymentHistoryScreen extends StatelessWidget {
   const PaymentHistoryScreen({super.key, required this.subscription});
@@ -28,44 +29,37 @@ class PaymentHistoryScreen extends StatelessWidget {
 
           final payments = snapshot.data ?? [];
           if (payments.isEmpty) {
-            final theme = Theme.of(context);
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.history,
-                      size: 64,
-                      color: theme.colorScheme.outline,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'هنوز پرداختی برای این مورد ثبت نشده است.',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            return const EmptyStateView(
+              icon: Icons.history,
+              message: 'هنوز پرداختی برای این مورد ثبت نشده است.',
             );
           }
 
-          return ListView.separated(
+          return ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: payments.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final payment = payments[index];
-              return ListTile(
-                leading: Icon(
-                  Icons.check_circle_outline,
-                  color: context.statusColors.success,
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: context.statusColors.success.withValues(
+                      alpha: 0.12,
+                    ),
+                    child: Icon(
+                      Icons.check_circle_outline,
+                      color: context.statusColors.success,
+                    ),
+                  ),
+                  title: Text(
+                    formatTooman(payment.amount),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(formatJalaliDate(payment.paidDate)),
                 ),
-                title: Text(formatTooman(payment.amount)),
-                subtitle: Text(formatJalaliDate(payment.paidDate)),
               );
             },
           );

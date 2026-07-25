@@ -5,6 +5,7 @@ import '../../constants/app_constants.dart';
 import '../../models/note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/empty_state.dart';
 import 'note_edit_screen.dart';
 import 'widgets/note_actions.dart';
 import 'widgets/note_card.dart';
@@ -149,9 +150,13 @@ class _NotesListScreenState extends State<NotesListScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : notes.isEmpty
-                ? _EmptyState(
-                    isFiltering: isFiltering,
-                    onAdd: () => _openEditor(context),
+                ? EmptyStateView(
+                    icon: Icons.note_alt_outlined,
+                    message: isFiltering
+                        ? 'یادداشتی با این مشخصات پیدا نشد.'
+                        : 'هنوز یادداشتی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
+                    actionLabel: isFiltering ? null : 'افزودن اولین یادداشت',
+                    onAction: isFiltering ? null : () => _openEditor(context),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.only(bottom: 88),
@@ -172,51 +177,6 @@ class _NotesListScreenState extends State<NotesListScreen> {
         onPressed: () => _openEditor(context),
         tooltip: 'یادداشت جدید',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.isFiltering, required this.onAdd});
-
-  final bool isFiltering;
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.note_alt_outlined,
-              size: 64,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isFiltering
-                  ? 'یادداشتی با این مشخصات پیدا نشد.'
-                  : 'هنوز یادداشتی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-            if (!isFiltering) ...[
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add),
-                label: const Text('افزودن اولین یادداشت'),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

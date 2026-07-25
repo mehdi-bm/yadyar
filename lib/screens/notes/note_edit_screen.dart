@@ -114,15 +114,19 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         actions: [
           if (_isEditing)
             IconButton(
-              icon: const Icon(Icons.delete_outline),
+              icon: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
               tooltip: 'حذف یادداشت',
               onPressed: _delete,
             ),
-          IconButton(
+          IconButton.filled(
             icon: const Icon(Icons.check),
             tooltip: 'ذخیره',
             onPressed: _save,
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Form(
@@ -130,61 +134,73 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'عنوان',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) => (value == null || value.trim().isEmpty)
-                  ? 'عنوان نمی‌تواند خالی باشد'
-                  : null,
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _contentController,
-              decoration: const InputDecoration(
-                labelText: 'متن یادداشت',
-                border: OutlineInputBorder(),
-                alignLabelWithHint: true,
-              ),
-              minLines: 5,
-              maxLines: 12,
-              textAlignVertical: TextAlignVertical.top,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _tagController,
-              decoration: const InputDecoration(
-                labelText: 'تگ (اختیاری)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (existingTags.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: existingTags
-                    .map(
-                      (tag) => ActionChip(
-                        label: Text(tag),
-                        onPressed: () =>
-                            setState(() => _tagController.text = tag),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'عنوان',
+                        prefixIcon: Icon(Icons.title_outlined),
                       ),
-                    )
-                    .toList(),
+                      validator: (value) =>
+                          (value == null || value.trim().isEmpty)
+                          ? 'عنوان نمی‌تواند خالی باشد'
+                          : null,
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _contentController,
+                      decoration: const InputDecoration(
+                        labelText: 'متن یادداشت',
+                        alignLabelWithHint: true,
+                      ),
+                      minLines: 5,
+                      maxLines: 12,
+                      textAlignVertical: TextAlignVertical.top,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _tagController,
+                      decoration: const InputDecoration(
+                        labelText: 'تگ (اختیاری)',
+                        prefixIcon: Icon(Icons.label_outline),
+                      ),
+                    ),
+                    if (existingTags.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: existingTags
+                              .map(
+                                (tag) => ActionChip(
+                                  label: Text(tag),
+                                  onPressed: () =>
+                                      setState(() => _tagController.text = tag),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('سنجاق کردن'),
+                      secondary: const Icon(Icons.push_pin_outlined),
+                      value: _isPinned,
+                      onChanged: (value) => setState(() => _isPinned = value),
+                    ),
+                  ],
+                ),
               ),
-            ],
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('سنجاق کردن'),
-              secondary: const Icon(Icons.push_pin_outlined),
-              value: _isPinned,
-              onChanged: (value) => setState(() => _isPinned = value),
             ),
+            const SizedBox(height: 16),
             ReminderFormSection(
               enabled: _reminderEnabled,
               dateTime: _reminderDateTime,

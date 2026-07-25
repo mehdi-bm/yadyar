@@ -5,6 +5,7 @@ import '../../constants/app_constants.dart';
 import '../../models/shopping_list.dart';
 import '../../providers/shopping_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/empty_state.dart';
 import 'shopping_list_detail_screen.dart';
 import 'widgets/shopping_list_actions.dart';
 import 'widgets/shopping_list_card.dart';
@@ -96,7 +97,12 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
       body: provider.isLoadingLists
           ? const Center(child: CircularProgressIndicator())
           : lists.isEmpty
-          ? _EmptyState(onAdd: () => _addList(context))
+          ? EmptyStateView(
+              icon: Icons.shopping_cart_outlined,
+              message: 'هنوز لیست خریدی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
+              actionLabel: 'ساخت اولین لیست خرید',
+              onAction: () => _addList(context),
+            )
           : ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 88),
               itemCount: lists.length,
@@ -114,46 +120,6 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
         onPressed: () => _addList(context),
         tooltip: 'لیست جدید',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.shopping_cart_outlined,
-              size: 64,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'هنوز لیست خریدی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('ساخت اولین لیست خرید'),
-            ),
-          ],
-        ),
       ),
     );
   }

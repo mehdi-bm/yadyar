@@ -176,10 +176,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                         .map(
                           (entry) => Card(
                             child: ListTile(
-                              leading: Icon(
-                                entry.isToday
-                                    ? Icons.notifications_active_outlined
-                                    : Icons.notifications_none_outlined,
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.12),
+                                child: Icon(
+                                  entry.isToday
+                                      ? Icons.notifications_active_outlined
+                                      : Icons.notifications_none_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                               ),
                               title: Text(
                                 entry.note?.title ?? entry.reminder.title,
@@ -235,7 +242,16 @@ class DashboardScreenState extends State<DashboardScreen> {
                         .map(
                           (entry) => Card(
                             child: ListTile(
-                              leading: const Icon(Icons.shopping_cart_outlined),
+                              leading: CircleAvatar(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.12),
+                                child: Icon(
+                                  Icons.shopping_cart_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
                               title: Text(entry.list.name),
                               subtitle: Text(
                                 '${entry.remainingCount} آیتم باقی‌مانده',
@@ -295,16 +311,43 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
-      color: Theme.of(context).colorScheme.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-        child: Row(
-          children: [
-            _SummaryItem(value: reminderCount, label: 'یادآور امروز'),
-            _SummaryItem(value: overdueCount, label: 'قبض معوق'),
-            _SummaryItem(value: shoppingCount, label: 'خرید باقی‌مانده'),
-          ],
+      elevation: 0,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [scheme.primaryContainer, scheme.primary.withValues(alpha: 0.75)],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
+          child: Row(
+            children: [
+              _SummaryItem(
+                value: reminderCount,
+                label: 'یادآور امروز',
+                icon: Icons.notifications_active_outlined,
+                highlighted: reminderCount > 0,
+              ),
+              _SummaryItem(
+                value: overdueCount,
+                label: 'قبض معوق',
+                icon: Icons.report_gmailerrorred_outlined,
+                highlighted: overdueCount > 0,
+                highlightColor: context.statusColors.error,
+              ),
+              _SummaryItem(
+                value: shoppingCount,
+                label: 'خرید باقی‌مانده',
+                icon: Icons.shopping_cart_outlined,
+                highlighted: shoppingCount > 0,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -312,26 +355,46 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({required this.value, required this.label});
+  const _SummaryItem({
+    required this.value,
+    required this.label,
+    required this.icon,
+    this.highlighted = false,
+    this.highlightColor,
+  });
 
   final int value;
   final String label;
+  final IconData icon;
+  final bool highlighted;
+  final Color? highlightColor;
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Column(
-      children: [
-        Text(
-          '$value',
-          style: Theme.of(
-            context,
-          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text(label, textAlign: TextAlign.center),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final accent = highlighted ? (highlightColor ?? scheme.onPrimary) : scheme.onPrimaryContainer;
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: accent, size: 22),
+          const SizedBox(height: 6),
+          Text(
+            '$value',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: accent,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: scheme.onPrimaryContainer),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {

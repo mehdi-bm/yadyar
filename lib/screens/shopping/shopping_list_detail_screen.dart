@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/shopping_list.dart';
 import '../../providers/shopping_provider.dart';
+import '../../widgets/empty_state.dart';
 import 'widgets/add_item_sheet.dart';
 import 'widgets/shopping_item_tile.dart';
 
@@ -49,7 +50,12 @@ class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
       body: provider.isLoadingItems
           ? const Center(child: CircularProgressIndicator())
           : isEmpty
-          ? _EmptyItemsState(onAdd: () => showAddItemSheet(context))
+          ? EmptyStateView(
+              icon: Icons.playlist_add_outlined,
+              message: 'این لیست هنوز آیتمی ندارد.\nبرای شروع، دکمه + را بزنید.',
+              actionLabel: 'افزودن اولین آیتم',
+              onAction: () => showAddItemSheet(context),
+            )
           : ListView(
               padding: const EdgeInsets.only(bottom: 88),
               children: [
@@ -97,46 +103,6 @@ class _CategoryHeader extends StatelessWidget {
         style: theme.textTheme.labelLarge?.copyWith(
           color: theme.colorScheme.primary,
           fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyItemsState extends StatelessWidget {
-  const _EmptyItemsState({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.playlist_add_outlined,
-              size: 64,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'این لیست هنوز آیتمی ندارد.\nبرای شروع، دکمه + را بزنید.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('افزودن اولین آیتم'),
-            ),
-          ],
         ),
       ),
     );

@@ -139,29 +139,28 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     return Scaffold(
       body: tabs[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: _selectTab,
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _selectTab,
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
+            selectedIcon: Icon(Icons.dashboard),
             label: 'داشبورد',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.note_outlined),
-            activeIcon: Icon(Icons.note),
+            selectedIcon: Icon(Icons.note),
             label: 'یادداشت',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
+            selectedIcon: Icon(Icons.receipt_long),
             label: 'قبض‌ها',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
+            selectedIcon: Icon(Icons.shopping_cart),
             label: 'خرید',
           ),
         ],

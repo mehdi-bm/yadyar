@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/app_constants.dart';
+import '../widgets/app_logo.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key, required this.onFinished});
@@ -24,19 +25,7 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 104,
-                height: 104,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: Icon(
-                  Icons.task_alt_rounded,
-                  size: 64,
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
+              const AppLogo(size: 104),
               const SizedBox(height: 20),
               Text(
                 AppConstants.appName,

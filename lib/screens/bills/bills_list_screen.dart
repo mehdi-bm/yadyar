@@ -5,6 +5,7 @@ import '../../constants/app_constants.dart';
 import '../../models/subscription.dart';
 import '../../providers/bills_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/empty_state.dart';
 import 'payment_history_screen.dart';
 import 'subscription_edit_screen.dart';
 import 'widgets/monthly_expense_chart.dart';
@@ -104,7 +105,12 @@ class _BillsListScreenState extends State<BillsListScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : subscriptions.isEmpty
-          ? _EmptyState(onAdd: () => _openEditor(context))
+          ? EmptyStateView(
+              icon: Icons.receipt_long_outlined,
+              message: 'هنوز اشتراک یا قبضی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
+              actionLabel: 'افزودن اولین قبض',
+              onAction: () => _openEditor(context),
+            )
           : ListView(
               padding: const EdgeInsets.only(bottom: 88),
               children: [
@@ -123,46 +129,6 @@ class _BillsListScreenState extends State<BillsListScreen> {
         onPressed: () => _openEditor(context),
         tooltip: 'افزودن اشتراک/قبض',
         child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'هنوز اشتراک یا قبضی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: onAdd,
-              icon: const Icon(Icons.add),
-              label: const Text('افزودن اولین قبض'),
-            ),
-          ],
-        ),
       ),
     );
   }
