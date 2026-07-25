@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'constants/app_constants.dart';
 import 'providers/bills_provider.dart';
@@ -10,22 +11,36 @@ import 'providers/shopping_provider.dart';
 import 'screens/bills/bills_list_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/notes/notes_list_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/shopping/shopping_lists_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.instance.initialize();
-  await NotificationService.instance.requestPermissionOnFirstLaunch();
   final themeController = await ThemeController.load();
-  runApp(YadyarApp(themeController: themeController));
+  final preferences = await SharedPreferences.getInstance();
+  final onboardingComplete =
+      preferences.getBool(OnboardingScreen.preferenceKey) ?? false;
+  runApp(
+    YadyarApp(
+      themeController: themeController,
+      onboardingComplete: onboardingComplete,
+    ),
+  );
 }
 
 class YadyarApp extends StatelessWidget {
-  const YadyarApp({super.key, this.themeController});
+  const YadyarApp({
+    super.key,
+    this.themeController,
+    this.onboardingComplete = true,
+  });
 
   final ThemeController? themeController;
+  final bool onboardingComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -54,10 +69,45 @@ class YadyarApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: const HomeScreen(),
+          home: LaunchGate(onboardingComplete: onboardingComplete),
         ),
       ),
     );
+  }
+}
+
+class LaunchGate extends StatefulWidget {
+  const LaunchGate({super.key, required this.onboardingComplete});
+
+  final bool onboardingComplete;
+
+  @override
+  State<LaunchGate> createState() => _LaunchGateState();
+}
+
+class _LaunchGateState extends State<LaunchGate> {
+  bool _showSplash = true;
+  late bool _onboardingComplete;
+
+  @override
+  void initState() {
+    super.initState();
+    _onboardingComplete = widget.onboardingComplete;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showSplash) {
+      return SplashScreen(
+        onFinished: () => setState(() => _showSplash = false),
+      );
+    }
+    if (!_onboardingComplete) {
+      return OnboardingScreen(
+        onComplete: () => setState(() => _onboardingComplete = true),
+      );
+    }
+    return const HomeScreen();
   }
 }
 

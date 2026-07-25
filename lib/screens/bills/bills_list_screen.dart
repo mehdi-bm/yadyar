@@ -104,7 +104,7 @@ class _BillsListScreenState extends State<BillsListScreen> {
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : subscriptions.isEmpty
-          ? const _EmptyState()
+          ? _EmptyState(onAdd: () => _openEditor(context))
           : ListView(
               padding: const EdgeInsets.only(bottom: 88),
               children: [
@@ -129,7 +129,9 @@ class _BillsListScreenState extends State<BillsListScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.onAdd});
+
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +154,12 @@ class _EmptyState extends StatelessWidget {
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.outline,
               ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('افزودن اولین قبض'),
             ),
           ],
         ),

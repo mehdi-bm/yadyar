@@ -49,7 +49,7 @@ class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
       body: provider.isLoadingItems
           ? const Center(child: CircularProgressIndicator())
           : isEmpty
-          ? const _EmptyItemsState()
+          ? _EmptyItemsState(onAdd: () => showAddItemSheet(context))
           : ListView(
               padding: const EdgeInsets.only(bottom: 88),
               children: [
@@ -104,7 +104,9 @@ class _CategoryHeader extends StatelessWidget {
 }
 
 class _EmptyItemsState extends StatelessWidget {
-  const _EmptyItemsState();
+  const _EmptyItemsState({required this.onAdd});
+
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +129,12 @@ class _EmptyItemsState extends StatelessWidget {
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.outline,
               ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('افزودن اولین آیتم'),
             ),
           ],
         ),

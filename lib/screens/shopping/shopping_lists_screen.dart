@@ -96,7 +96,7 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
       body: provider.isLoadingLists
           ? const Center(child: CircularProgressIndicator())
           : lists.isEmpty
-          ? const _EmptyState()
+          ? _EmptyState(onAdd: () => _addList(context))
           : ListView.builder(
               padding: const EdgeInsets.only(top: 8, bottom: 88),
               itemCount: lists.length,
@@ -120,7 +120,9 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.onAdd});
+
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +145,12 @@ class _EmptyState extends StatelessWidget {
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.outline,
               ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('ساخت اولین لیست خرید'),
             ),
           ],
         ),

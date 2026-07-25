@@ -5,7 +5,7 @@ import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
 import 'bill_status.dart';
 
-class SubscriptionCard extends StatelessWidget {
+class SubscriptionCard extends StatefulWidget {
   const SubscriptionCard({
     super.key,
     required this.subscription,
@@ -20,16 +20,31 @@ class SubscriptionCard extends StatelessWidget {
   final VoidCallback onMarkAsPaid;
 
   @override
+  State<SubscriptionCard> createState() => _SubscriptionCardState();
+}
+
+class _SubscriptionCardState extends State<SubscriptionCard> {
+  bool _showPaidFeedback = false;
+
+  Future<void> _markAsPaid() async {
+    if (_showPaidFeedback) return;
+    setState(() => _showPaidFeedback = true);
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (mounted) widget.onMarkAsPaid();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final subscription = widget.subscription;
     final status = billStatusOf(subscription);
     final statusColor = billStatusColor(context, status);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -97,10 +112,31 @@ class SubscriptionCard extends StatelessWidget {
                     ),
                   ),
                   if (!subscription.isPaid)
-                    FilledButton.tonalIcon(
-                      onPressed: onMarkAsPaid,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('پرداخت‌شده'),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      transitionBuilder: (child, animation) => ScaleTransition(
+                        scale: animation,
+                        child: FadeTransition(opacity: animation, child: child),
+                      ),
+                      child: _showPaidFeedback
+                          ? Semantics(
+                              liveRegion: true,
+                              label: 'پرداخت ثبت شد',
+                              child: Chip(
+                                key: const ValueKey('paid-feedback'),
+                                avatar: const Icon(
+                                  Icons.check_circle,
+                                  size: 20,
+                                ),
+                                label: const Text('ثبت شد'),
+                              ),
+                            )
+                          : FilledButton.tonalIcon(
+                              key: const ValueKey('mark-paid-button'),
+                              onPressed: _markAsPaid,
+                              icon: const Icon(Icons.check, size: 18),
+                              label: const Text('پرداخت‌شده'),
+                            ),
                     ),
                 ],
               ),

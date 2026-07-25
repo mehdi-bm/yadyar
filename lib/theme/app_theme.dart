@@ -43,7 +43,7 @@ class AppTheme {
     surface: const Color(0xFFFFFCF4),
     statusColors: const AppStatusColors(
       success: Color(0xFF2E7D32),
-      warning: Color(0xFFB26A00),
+      warning: Color(0xFF8A5200),
       error: Color(0xFFC62828),
     ),
   );
@@ -73,10 +73,20 @@ class AppTheme {
       surface: surface,
       error: statusColors.error,
     );
+    final typography = Typography.material2021();
+    final textTheme = brightness == Brightness.dark
+        ? typography.white
+        : typography.black;
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: scheme,
+      textTheme: textTheme.copyWith(
+        bodyLarge: textTheme.bodyLarge?.copyWith(fontSize: 16, height: 1.5),
+        bodyMedium: textTheme.bodyMedium?.copyWith(fontSize: 15, height: 1.45),
+        labelLarge: textTheme.labelLarge?.copyWith(fontSize: 14),
+      ),
       scaffoldBackgroundColor: scaffold,
       canvasColor: scaffold,
       cardColor: surface,

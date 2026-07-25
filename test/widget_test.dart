@@ -15,7 +15,10 @@ void main() {
   tearDownAll(() async {
     // main.dart از DatabaseHelper.instance (سینگلتون واقعی، نه درون‌حافظه‌ای)
     // استفاده می‌کند؛ فایل تستی ساخته‌شده پاک می‌شود تا اثری باقی نماند.
-    final dbPath = p.join(await databaseFactory.getDatabasesPath(), 'yadyar.db');
+    final dbPath = p.join(
+      await databaseFactory.getDatabasesPath(),
+      'yadyar.db',
+    );
     final file = File(dbPath);
     if (await file.exists()) await file.delete();
   });
@@ -39,5 +42,16 @@ void main() {
     await tester.pump();
 
     expect(find.byTooltip('لیست جدید'), findsOneWidget);
+  });
+
+  testWidgets('first launch shows onboarding after splash', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const YadyarApp(onboardingComplete: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('یادداشت و یادآور'), findsOneWidget);
+    expect(find.text('ادامه'), findsOneWidget);
+    expect(find.text('رد کردن'), findsOneWidget);
   });
 }

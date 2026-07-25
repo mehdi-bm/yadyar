@@ -149,7 +149,10 @@ class _NotesListScreenState extends State<NotesListScreen> {
             child: provider.isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : notes.isEmpty
-                ? _EmptyState(isFiltering: isFiltering)
+                ? _EmptyState(
+                    isFiltering: isFiltering,
+                    onAdd: () => _openEditor(context),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.only(bottom: 88),
                     itemCount: notes.length,
@@ -175,9 +178,10 @@ class _NotesListScreenState extends State<NotesListScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.isFiltering});
+  const _EmptyState({required this.isFiltering, required this.onAdd});
 
   final bool isFiltering;
+  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -203,6 +207,14 @@ class _EmptyState extends StatelessWidget {
                 color: theme.colorScheme.outline,
               ),
             ),
+            if (!isFiltering) ...[
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add),
+                label: const Text('افزودن اولین یادداشت'),
+              ),
+            ],
           ],
         ),
       ),

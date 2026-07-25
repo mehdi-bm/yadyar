@@ -111,10 +111,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           page.description,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            height: 1.7,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                height: 1.7,
+                              ),
                         ),
                       ],
                     ),
