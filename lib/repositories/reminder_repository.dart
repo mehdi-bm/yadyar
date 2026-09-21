@@ -37,14 +37,23 @@ class ReminderRepository {
 
   Future<Reminder?> getById(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_table, where: 'id = ?', whereArgs: [id], limit: 1);
+    final maps = await db.query(
+      _table,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (maps.isEmpty) return null;
     return Reminder.fromMap(maps.first);
   }
 
   Future<List<Reminder>> getByNoteId(int noteId) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_table, where: 'noteId = ?', whereArgs: [noteId]);
+    final maps = await db.query(
+      _table,
+      where: 'noteId = ?',
+      whereArgs: [noteId],
+    );
     return maps.map(Reminder.fromMap).toList();
   }
 }

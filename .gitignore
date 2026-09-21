@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# محلی و حاوی کلیدهای واقعی API تبلیغات - هرگز commit نشود.
+dart_define.json

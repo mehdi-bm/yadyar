@@ -18,6 +18,7 @@ class Subscription {
     this.reminderDaysBefore = 0,
     this.isPaid = false,
     this.lastPaidDate,
+    this.remainingOccurrences,
   });
 
   final int? id;
@@ -32,6 +33,10 @@ class Subscription {
   /// تا پیش از اولین پرداخت مقدار ندارد.
   final DateTime? lastPaidDate;
 
+  /// تعداد دفعات باقی‌مانده از یک تکرار محدود (مثلاً قسط ۱۲ ماهه). null یعنی
+  /// تکرار بی‌نهایت است؛ برای repeatType == once همیشه بی‌معنی و null است.
+  final int? remainingOccurrences;
+
   Subscription copyWith({
     int? id,
     String? title,
@@ -42,6 +47,8 @@ class Subscription {
     int? reminderDaysBefore,
     bool? isPaid,
     DateTime? lastPaidDate,
+    int? remainingOccurrences,
+    bool clearRemainingOccurrences = false,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -53,6 +60,9 @@ class Subscription {
       reminderDaysBefore: reminderDaysBefore ?? this.reminderDaysBefore,
       isPaid: isPaid ?? this.isPaid,
       lastPaidDate: lastPaidDate ?? this.lastPaidDate,
+      remainingOccurrences: clearRemainingOccurrences
+          ? null
+          : (remainingOccurrences ?? this.remainingOccurrences),
     );
   }
 
@@ -67,6 +77,7 @@ class Subscription {
       'reminderDaysBefore': reminderDaysBefore,
       'isPaid': isPaid ? 1 : 0,
       'lastPaidDate': lastPaidDate?.toIso8601String(),
+      'remainingOccurrences': remainingOccurrences,
     };
   }
 
@@ -83,6 +94,7 @@ class Subscription {
       lastPaidDate: map['lastPaidDate'] != null
           ? DateTime.parse(map['lastPaidDate'] as String)
           : null,
+      remainingOccurrences: map['remainingOccurrences'] as int?,
     );
   }
 }

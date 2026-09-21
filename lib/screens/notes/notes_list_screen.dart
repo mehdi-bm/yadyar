@@ -99,7 +99,32 @@ class _NotesListScreenState extends State<NotesListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConstants.appName),
-        actions: const [ThemeModeButton()],
+        actions: [
+          PopupMenuButton<NoteSortOption>(
+            icon: const Icon(Icons.sort),
+            tooltip: 'مرتب‌سازی',
+            initialValue: provider.sortOption,
+            onSelected: provider.setSortOption,
+            itemBuilder: (context) => NoteSortOption.values
+                .map(
+                  (option) => PopupMenuItem(
+                    value: option,
+                    child: Row(
+                      children: [
+                        if (option == provider.sortOption)
+                          const Icon(Icons.check, size: 18)
+                        else
+                          const SizedBox(width: 18),
+                        const SizedBox(width: 8),
+                        Text(noteSortOptionLabels[option]!),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          const ThemeModeButton(),
+        ],
       ),
       body: Column(
         children: [
@@ -133,10 +158,17 @@ class _NotesListScreenState extends State<NotesListScreen> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: tags.length,
+                itemCount: tags.length + 1,
                 separatorBuilder: (_, _) => const SizedBox(width: 6),
                 itemBuilder: (context, index) {
-                  final tag = tags[index];
+                  if (index == 0) {
+                    return FilterChip(
+                      label: const Text('همه'),
+                      selected: provider.selectedTag == null,
+                      onSelected: (_) => provider.setTagFilter(null),
+                    );
+                  }
+                  final tag = tags[index - 1];
                   return FilterChip(
                     label: Text(tag),
                     selected: provider.selectedTag == tag,
@@ -165,6 +197,7 @@ class _NotesListScreenState extends State<NotesListScreen> {
                       final note = notes[index];
                       return NoteCard(
                         note: note,
+                        reminder: provider.reminderForNote(note.id!),
                         onTap: () => _openEditor(context, note: note),
                         onLongPress: () => _handleLongPress(context, note),
                       );

@@ -6,7 +6,8 @@ Future<bool> showDeleteShoppingListConfirmation(BuildContext context) {
   return showConfirmDialog(
     context,
     title: 'حذف لیست خرید',
-    message: 'این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟',
+    message:
+        'این لیست و همه آیتم‌های آن برای همیشه حذف خواهد شد. آیا مطمئن هستید؟',
   );
 }
 

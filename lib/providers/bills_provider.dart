@@ -99,7 +99,9 @@ class BillsProvider extends ChangeNotifier {
 
   /// ثبت پرداخت جدید در تاریخچه و به‌روزرسانی وضعیت. اگر تکرارشونده باشد،
   /// سررسید به چرخه بعد منتقل و isPaid برای دوره جدید false می‌شود؛ اگر
-  /// یک‌بار مصرف باشد، برای همیشه «پرداخت‌شده» می‌ماند.
+  /// یک‌بار مصرف باشد، برای همیشه «پرداخت‌شده» می‌ماند. اگر تعداد تکرار
+  /// محدود بود (مثلاً قسط ۱۲ ماهه)، یکی از remainingOccurrences کم می‌شود
+  /// و وقتی به صفر برسد، مثل یک اشتراک یک‌بار مصرف برای همیشه تمام می‌شود.
   Future<void> markAsPaid(Subscription subscription) async {
     final now = DateTime.now();
     await _subscriptionRepository.insertPayment(
@@ -110,16 +112,24 @@ class BillsProvider extends ChangeNotifier {
       ),
     );
 
-    final isRecurring = subscription.repeatType != SubscriptionRepeatType.once;
+    final wasRecurring = subscription.repeatType != SubscriptionRepeatType.once;
+    var remaining = subscription.remainingOccurrences;
+    if (wasRecurring && remaining != null) {
+      remaining -= 1;
+    }
+    final isFinished = wasRecurring && remaining != null && remaining <= 0;
+    final stillRecurring = wasRecurring && !isFinished;
+
     final updated = subscription.copyWith(
       lastPaidDate: now,
-      isPaid: !isRecurring,
-      dueDate: isRecurring
+      isPaid: !stillRecurring,
+      dueDate: stillRecurring
           ? _nextDueDate(subscription.dueDate, subscription.repeatType)
           : subscription.dueDate,
+      remainingOccurrences: remaining,
     );
     await _subscriptionRepository.update(updated);
-    if (isRecurring) {
+    if (stillRecurring) {
       await _notificationService.scheduleSubscriptionReminder(updated);
     } else {
       await _notificationService.cancelReminder(

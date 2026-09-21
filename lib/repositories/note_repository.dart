@@ -16,7 +16,12 @@ class NoteRepository {
 
   Future<int> update(Note note) async {
     final db = await _databaseHelper.database;
-    return db.update(_table, note.toMap(), where: 'id = ?', whereArgs: [note.id]);
+    return db.update(
+      _table,
+      note.toMap(),
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
   }
 
   Future<int> delete(int id) async {
@@ -26,13 +31,21 @@ class NoteRepository {
 
   Future<List<Note>> getAll() async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_table, orderBy: 'isPinned DESC, updatedAt DESC');
+    final maps = await db.query(
+      _table,
+      orderBy: 'isPinned DESC, updatedAt DESC',
+    );
     return maps.map(Note.fromMap).toList();
   }
 
   Future<Note?> getById(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_table, where: 'id = ?', whereArgs: [id], limit: 1);
+    final maps = await db.query(
+      _table,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (maps.isEmpty) return null;
     return Note.fromMap(maps.first);
   }

@@ -11,7 +11,7 @@ class DatabaseHelper {
 
   static final DatabaseHelper instance = DatabaseHelper();
 
-  static const int databaseVersion = 2;
+  static const int databaseVersion = 3;
   static const String databaseName = 'yadyar.db';
 
   static const String tableNotes = 'notes';
@@ -29,8 +29,13 @@ class DatabaseHelper {
     return _database!;
   }
 
+  /// مسیر واقعی فایل پایگاه‌داده روی دیسک؛ برای تهیه/بازیابی نسخه پشتیبان لازم است.
+  Future<String> resolveDatabasePath() async {
+    return _customPath ?? join(await getDatabasesPath(), databaseName);
+  }
+
   Future<Database> _initDatabase() async {
-    final path = _customPath ?? join(await getDatabasesPath(), databaseName);
+    final path = await resolveDatabasePath();
     return openDatabase(
       path,
       version: databaseVersion,
@@ -81,7 +86,8 @@ class DatabaseHelper {
         category TEXT NOT NULL,
         reminderDaysBefore INTEGER NOT NULL DEFAULT 0,
         isPaid INTEGER NOT NULL DEFAULT 0,
-        lastPaidDate TEXT
+        lastPaidDate TEXT,
+        remainingOccurrences INTEGER
       )
     ''');
 
@@ -123,6 +129,11 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createSubscriptionPaymentsTable(db);
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE $tableSubscriptions ADD COLUMN remainingOccurrences INTEGER',
+      );
     }
   }
 

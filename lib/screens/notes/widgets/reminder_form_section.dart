@@ -31,11 +31,14 @@ class ReminderFormSection extends StatelessWidget {
   final ValueChanged<ReminderRepeatType> onRepeatTypeChanged;
 
   Future<void> _pickDateTime(BuildContext context) async {
+    final earliestReference = dateTime.isBefore(DateTime.now())
+        ? dateTime
+        : DateTime.now();
     final pickedDate = await showPersianDatePicker(
       context: context,
       initialDate: Jalali.fromDateTime(dateTime),
       firstDate: Jalali.fromDateTime(
-        DateTime.now().subtract(const Duration(days: 1)),
+        earliestReference.subtract(const Duration(days: 1)),
       ),
       lastDate: Jalali.fromDateTime(
         DateTime.now().add(const Duration(days: 365 * 5)),

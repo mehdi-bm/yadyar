@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../constants/app_constants.dart';
 import '../../models/subscription.dart';
 import '../../providers/bills_provider.dart';
+import '../../utils/currency_formatter.dart';
 import '../../utils/date_formatter.dart';
 import 'widgets/subscription_actions.dart';
 
@@ -15,6 +16,12 @@ const Map<SubscriptionRepeatType, String> subscriptionRepeatTypeLabels = {
 };
 
 const String _otherCategory = 'سایر';
+
+const Map<SubscriptionRepeatType, String> subscriptionOccurrenceUnitLabels = {
+  SubscriptionRepeatType.monthly: 'ماه',
+  SubscriptionRepeatType.yearly: 'سال',
+  SubscriptionRepeatType.once: '',
+};
 
 class SubscriptionEditScreen extends StatefulWidget {
   const SubscriptionEditScreen({super.key, this.subscription});
@@ -32,10 +39,12 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
   late final TextEditingController _amountController;
   late final TextEditingController _customCategoryController;
   late final TextEditingController _reminderDaysController;
+  late final TextEditingController _occurrencesController;
 
   late String _selectedCategory;
   late DateTime _dueDate;
   late SubscriptionRepeatType _repeatType;
+  late bool _isLimitedRepeat;
 
   bool get _isEditing => widget.subscription != null;
 
@@ -46,10 +55,14 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
 
     _titleController = TextEditingController(text: subscription?.title ?? '');
     _amountController = TextEditingController(
-      text: subscription != null ? subscription.amount.toStringAsFixed(0) : '',
+      text: subscription != null ? formatAmountInput(subscription.amount) : '',
     );
     _reminderDaysController = TextEditingController(
       text: (subscription?.reminderDaysBefore ?? 3).toString(),
+    );
+    _isLimitedRepeat = subscription?.remainingOccurrences != null;
+    _occurrencesController = TextEditingController(
+      text: subscription?.remainingOccurrences?.toString() ?? '',
     );
     _dueDate =
         subscription?.dueDate ?? DateTime.now().add(const Duration(days: 30));
@@ -74,6 +87,7 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     _amountController.dispose();
     _customCategoryController.dispose();
     _reminderDaysController.dispose();
+    _occurrencesController.dispose();
     super.dispose();
   }
 
@@ -118,13 +132,17 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     final subscription = Subscription(
       id: widget.subscription?.id,
       title: _titleController.text.trim(),
-      amount: double.parse(_amountController.text.trim()),
+      amount: parseFormattedAmount(_amountController.text)!.toDouble(),
       dueDate: _dueDate,
       repeatType: _repeatType,
       category: category,
       reminderDaysBefore: int.parse(_reminderDaysController.text.trim()),
       isPaid: widget.subscription?.isPaid ?? false,
       lastPaidDate: widget.subscription?.lastPaidDate,
+      remainingOccurrences:
+          (_repeatType != SubscriptionRepeatType.once && _isLimitedRepeat)
+          ? int.parse(_occurrencesController.text.trim())
+          : null,
     );
 
     if (_isEditing) {
@@ -198,8 +216,9 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
                         prefixIcon: Icon(Icons.payments_outlined),
                       ),
                       keyboardType: TextInputType.number,
+                      inputFormatters: [ThousandsSeparatorInputFormatter()],
                       validator: (value) {
-                        final parsed = double.tryParse((value ?? '').trim());
+                        final parsed = parseFormattedAmount(value ?? '');
                         if (parsed == null || parsed <= 0) {
                           return 'مبلغ معتبر وارد کنید';
                         }
@@ -276,10 +295,61 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
                         return ChoiceChip(
                           label: Text(subscriptionRepeatTypeLabels[type]!),
                           selected: _repeatType == type,
-                          onSelected: (_) => setState(() => _repeatType = type),
+                          onSelected: (_) => setState(() {
+                            _repeatType = type;
+                            if (type == SubscriptionRepeatType.once) {
+                              _isLimitedRepeat = false;
+                            }
+                          }),
                         );
                       }).toList(),
                     ),
+                    if (_repeatType != SubscriptionRepeatType.once) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'تعداد تکرار',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('بی‌نهایت'),
+                            selected: !_isLimitedRepeat,
+                            onSelected: (_) =>
+                                setState(() => _isLimitedRepeat = false),
+                          ),
+                          ChoiceChip(
+                            label: const Text('تعداد مشخص'),
+                            selected: _isLimitedRepeat,
+                            onSelected: (_) =>
+                                setState(() => _isLimitedRepeat = true),
+                          ),
+                        ],
+                      ),
+                      if (_isLimitedRepeat) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _occurrencesController,
+                          decoration: InputDecoration(
+                            labelText: 'تعداد دفعات باقی‌مانده',
+                            prefixIcon: const Icon(Icons.repeat_outlined),
+                            suffixText:
+                                subscriptionOccurrenceUnitLabels[_repeatType],
+                          ),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (!_isLimitedRepeat) return null;
+                            final parsed = int.tryParse((value ?? '').trim());
+                            if (parsed == null || parsed < 0) {
+                              return 'عدد معتبر وارد کنید';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ],
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _reminderDaysController,

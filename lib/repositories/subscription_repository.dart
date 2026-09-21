@@ -39,7 +39,12 @@ class SubscriptionRepository {
 
   Future<Subscription?> getById(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_table, where: 'id = ?', whereArgs: [id], limit: 1);
+    final maps = await db.query(
+      _table,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (maps.isEmpty) return null;
     return Subscription.fromMap(maps.first);
   }
@@ -51,7 +56,9 @@ class SubscriptionRepository {
     return db.insert(_paymentsTable, payment.toMap());
   }
 
-  Future<List<SubscriptionPayment>> getPaymentsBySubscriptionId(int subscriptionId) async {
+  Future<List<SubscriptionPayment>> getPaymentsBySubscriptionId(
+    int subscriptionId,
+  ) async {
     final db = await _databaseHelper.database;
     final maps = await db.query(
       _paymentsTable,

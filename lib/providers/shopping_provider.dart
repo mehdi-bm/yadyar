@@ -35,7 +35,8 @@ class ShoppingProvider extends ChangeNotifier {
   }
 
   /// آیتم‌های خریداری‌شده، جدا از دسته‌بندی‌ها و در پایین لیست نمایش داده می‌شوند.
-  List<ShoppingItem> get checkedItems => _items.where((item) => item.isChecked).toList();
+  List<ShoppingItem> get checkedItems =>
+      _items.where((item) => item.isChecked).toList();
 
   bool get hasCheckedItems => checkedItems.isNotEmpty;
 
@@ -58,7 +59,9 @@ class ShoppingProvider extends ChangeNotifier {
   }
 
   Future<void> addList(String name) async {
-    await _repository.insert(ShoppingList(name: name, createdAt: DateTime.now()));
+    await _repository.insert(
+      ShoppingList(name: name, createdAt: DateTime.now()),
+    );
     await loadLists();
   }
 
@@ -83,11 +86,20 @@ class ShoppingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addItem({required String name, required String category, String? quantity}) async {
+  Future<void> addItem({
+    required String name,
+    required String category,
+    String? quantity,
+  }) async {
     final listId = _currentListId;
     if (listId == null) return;
     await _repository.insertItem(
-      ShoppingItem(shoppingListId: listId, name: name, category: category, quantity: quantity),
+      ShoppingItem(
+        shoppingListId: listId,
+        name: name,
+        category: category,
+        quantity: quantity,
+      ),
     );
     await loadItems(listId);
   }

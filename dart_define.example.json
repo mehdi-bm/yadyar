@@ -1,0 +1,8 @@
+{
+  "ADS_BASE_URL": "https://ads.parsikonline.ir/",
+  "ADS_API_KEY": "REPLACE_ME",
+  "ADS_EXTERNAL_APP_API_KEY": "REPLACE_ME",
+  "ADS_APP_NAME": "yadyar",
+  "ADS_PLATFORM": "Android",
+  "ADS_SECTION_CODE": "100"
+}

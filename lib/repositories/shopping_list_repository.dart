@@ -43,7 +43,12 @@ class ShoppingListRepository {
 
   Future<ShoppingList?> getById(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_listsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    final maps = await db.query(
+      _listsTable,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (maps.isEmpty) return null;
     return ShoppingList.fromMap(maps.first);
   }
@@ -57,7 +62,12 @@ class ShoppingListRepository {
 
   Future<int> updateItem(ShoppingItem item) async {
     final db = await _databaseHelper.database;
-    return db.update(_itemsTable, item.toMap(), where: 'id = ?', whereArgs: [item.id]);
+    return db.update(
+      _itemsTable,
+      item.toMap(),
+      where: 'id = ?',
+      whereArgs: [item.id],
+    );
   }
 
   Future<int> deleteItem(int id) async {
@@ -77,7 +87,12 @@ class ShoppingListRepository {
 
   Future<ShoppingItem?> getItemById(int id) async {
     final db = await _databaseHelper.database;
-    final maps = await db.query(_itemsTable, where: 'id = ?', whereArgs: [id], limit: 1);
+    final maps = await db.query(
+      _itemsTable,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (maps.isEmpty) return null;
     return ShoppingItem.fromMap(maps.first);
   }

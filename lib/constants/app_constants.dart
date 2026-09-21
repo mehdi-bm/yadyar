@@ -2,7 +2,7 @@
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'یادیار';
+  static const String appName = 'یادیار پارسیک';
   static const String appNameEn = 'Yadyar';
 
   static const List<String> subscriptionCategories = [

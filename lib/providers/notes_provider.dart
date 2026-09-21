@@ -6,6 +6,20 @@ import '../repositories/note_repository.dart';
 import '../repositories/reminder_repository.dart';
 import '../services/notification_service.dart';
 
+enum NoteSortOption {
+  nearestReminder,
+  updatedNewest,
+  createdNewest,
+  alphabetical,
+}
+
+const Map<NoteSortOption, String> noteSortOptionLabels = {
+  NoteSortOption.nearestReminder: 'نزدیک‌ترین یادآور',
+  NoteSortOption.updatedNewest: 'آخرین ویرایش',
+  NoteSortOption.createdNewest: 'تاریخ ایجاد',
+  NoteSortOption.alphabetical: 'الفبایی',
+};
+
 class NotesProvider extends ChangeNotifier {
   NotesProvider({
     NoteRepository? noteRepository,
@@ -21,13 +35,19 @@ class NotesProvider extends ChangeNotifier {
   final NotificationService _notificationService;
 
   List<Note> _notes = [];
+  Map<int, Reminder> _remindersByNoteId = {};
   bool _isLoading = false;
   String _searchQuery = '';
   String? _selectedTag;
+  NoteSortOption _sortOption = NoteSortOption.nearestReminder;
 
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   String? get selectedTag => _selectedTag;
+  NoteSortOption get sortOption => _sortOption;
+
+  /// یادآور فعال یک یادداشت (برای نمایش تاریخ/ساعت روی کارت)، در صورت وجود.
+  Reminder? reminderForNote(int noteId) => _remindersByNoteId[noteId];
 
   List<String> get allTags {
     final tags = _notes
@@ -51,16 +71,45 @@ class NotesProvider extends ChangeNotifier {
     }).toList();
 
     filtered.sort((a, b) {
+      // سنجاق‌شده‌ها همیشه بالای لیست می‌مانند، صرف‌نظر از نوع مرتب‌سازی انتخابی.
       if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
-      return b.updatedAt.compareTo(a.updatedAt);
+      switch (_sortOption) {
+        case NoteSortOption.nearestReminder:
+          final reminderA = _activeReminderDateFor(a.id);
+          final reminderB = _activeReminderDateFor(b.id);
+          if (reminderA == null && reminderB == null) {
+            return b.updatedAt.compareTo(a.updatedAt);
+          }
+          if (reminderA == null) return 1;
+          if (reminderB == null) return -1;
+          return reminderA.compareTo(reminderB);
+        case NoteSortOption.updatedNewest:
+          return b.updatedAt.compareTo(a.updatedAt);
+        case NoteSortOption.createdNewest:
+          return b.createdAt.compareTo(a.createdAt);
+        case NoteSortOption.alphabetical:
+          return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+      }
     });
     return filtered;
+  }
+
+  DateTime? _activeReminderDateFor(int? noteId) {
+    if (noteId == null) return null;
+    final reminder = _remindersByNoteId[noteId];
+    if (reminder == null || !reminder.isActive) return null;
+    return reminder.dateTime;
   }
 
   Future<void> loadNotes() async {
     _isLoading = true;
     notifyListeners();
     _notes = await _noteRepository.getAll();
+    final allReminders = await _reminderRepository.getAll();
+    _remindersByNoteId = {
+      for (final reminder in allReminders)
+        if (reminder.noteId != null) reminder.noteId!: reminder,
+    };
     _isLoading = false;
     notifyListeners();
   }
@@ -72,6 +121,11 @@ class NotesProvider extends ChangeNotifier {
 
   void setTagFilter(String? tag) {
     _selectedTag = _selectedTag == tag ? null : tag;
+    notifyListeners();
+  }
+
+  void setSortOption(NoteSortOption option) {
+    _sortOption = option;
     notifyListeners();
   }
 

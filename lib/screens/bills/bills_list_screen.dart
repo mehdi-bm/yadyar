@@ -107,7 +107,8 @@ class _BillsListScreenState extends State<BillsListScreen> {
           : subscriptions.isEmpty
           ? EmptyStateView(
               icon: Icons.receipt_long_outlined,
-              message: 'هنوز اشتراک یا قبضی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
+              message:
+                  'هنوز اشتراک یا قبضی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
               actionLabel: 'افزودن اولین قبض',
               onAction: () => _openEditor(context),
             )

@@ -13,19 +13,23 @@ void main() {
     databaseFactory = databaseFactoryFfi;
   });
 
-  test('upgrading an existing v1 database adds subscription_payments without data loss', () async {
-    final dir = await Directory.systemTemp.createTemp('yadyar_migration_test');
-    addTearDown(() => dir.delete(recursive: true));
-    final path = p.join(dir.path, 'test.db');
+  test(
+    'upgrading an existing v1 database adds subscription_payments without data loss',
+    () async {
+      final dir = await Directory.systemTemp.createTemp(
+        'yadyar_migration_test',
+      );
+      addTearDown(() => dir.delete(recursive: true));
+      final path = p.join(dir.path, 'test.db');
 
-    // یک پایگاه‌داده نسخه ۱ (بدون جدول subscription_payments) شبیه‌سازی می‌شود،
-    // دقیقاً همان چیزی که کاربران نصب‌شده قبل از این مرحله دارند.
-    final v1Db = await databaseFactory.openDatabase(
-      path,
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: (db, version) async {
-          await db.execute('''
+      // یک پایگاه‌داده نسخه ۱ (بدون جدول subscription_payments) شبیه‌سازی می‌شود،
+      // دقیقاً همان چیزی که کاربران نصب‌شده قبل از این مرحله دارند.
+      final v1Db = await databaseFactory.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (db, version) async {
+            await db.execute('''
             CREATE TABLE subscriptions (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               title TEXT NOT NULL,
@@ -38,42 +42,117 @@ void main() {
               lastPaidDate TEXT
             )
           ''');
-        },
-      ),
-    );
-    final existingId = await v1Db.insert('subscriptions', {
-      'title': 'اشتراک قدیمی',
-      'amount': 50000.0,
-      'dueDate': DateTime(2026, 8, 1).toIso8601String(),
-      'repeatType': 'monthly',
-      'category': 'اینترنت',
-      'reminderDaysBefore': 3,
-      'isPaid': 0,
-      'lastPaidDate': null,
-    });
-    await v1Db.close();
+          },
+        ),
+      );
+      final existingId = await v1Db.insert('subscriptions', {
+        'title': 'اشتراک قدیمی',
+        'amount': 50000.0,
+        'dueDate': DateTime(2026, 8, 1).toIso8601String(),
+        'repeatType': 'monthly',
+        'category': 'اینترنت',
+        'reminderDaysBefore': 3,
+        'isPaid': 0,
+        'lastPaidDate': null,
+      });
+      await v1Db.close();
 
-    // اکنون همان فایل با DatabaseHelper واقعی (نسخه ۲) باز می‌شود؛ onUpgrade باید اجرا شود.
-    final helper = DatabaseHelper(path: path);
-    final repository = SubscriptionRepository(databaseHelper: helper);
+      // اکنون همان فایل با DatabaseHelper واقعی (نسخه ۲) باز می‌شود؛ onUpgrade باید اجرا شود.
+      final helper = DatabaseHelper(path: path);
+      final repository = SubscriptionRepository(databaseHelper: helper);
 
-    final subscriptions = await repository.getAll();
-    expect(subscriptions, hasLength(1));
-    expect(subscriptions.first.id, existingId);
-    expect(subscriptions.first.title, 'اشتراک قدیمی');
+      final subscriptions = await repository.getAll();
+      expect(subscriptions, hasLength(1));
+      expect(subscriptions.first.id, existingId);
+      expect(subscriptions.first.title, 'اشتراک قدیمی');
 
-    final paymentId = await repository.insertPayment(
-      SubscriptionPayment(
-        subscriptionId: subscriptions.first.id!,
-        paidDate: DateTime.now(),
-        amount: 50000,
-      ),
-    );
-    expect(paymentId, greaterThan(0));
+      final paymentId = await repository.insertPayment(
+        SubscriptionPayment(
+          subscriptionId: subscriptions.first.id!,
+          paidDate: DateTime.now(),
+          amount: 50000,
+        ),
+      );
+      expect(paymentId, greaterThan(0));
 
-    final payments = await repository.getPaymentsBySubscriptionId(subscriptions.first.id!);
-    expect(payments, hasLength(1));
+      final payments = await repository.getPaymentsBySubscriptionId(
+        subscriptions.first.id!,
+      );
+      expect(payments, hasLength(1));
 
-    await helper.close();
-  });
+      await helper.close();
+    },
+  );
+
+  test(
+    'upgrading an existing v2 database adds remainingOccurrences without data loss',
+    () async {
+      final dir = await Directory.systemTemp.createTemp(
+        'yadyar_migration_test_v2',
+      );
+      addTearDown(() => dir.delete(recursive: true));
+      final path = p.join(dir.path, 'test.db');
+
+      // یک پایگاه‌داده نسخه ۲ (بدون ستون remainingOccurrences) شبیه‌سازی می‌شود.
+      final v2Db = await databaseFactory.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 2,
+          onCreate: (db, version) async {
+            await db.execute('''
+            CREATE TABLE subscriptions (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              title TEXT NOT NULL,
+              amount REAL NOT NULL,
+              dueDate TEXT NOT NULL,
+              repeatType TEXT NOT NULL,
+              category TEXT NOT NULL,
+              reminderDaysBefore INTEGER NOT NULL DEFAULT 0,
+              isPaid INTEGER NOT NULL DEFAULT 0,
+              lastPaidDate TEXT
+            )
+          ''');
+            await db.execute('''
+            CREATE TABLE subscription_payments (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              subscriptionId INTEGER NOT NULL,
+              paidDate TEXT NOT NULL,
+              amount REAL NOT NULL,
+              FOREIGN KEY (subscriptionId) REFERENCES subscriptions (id) ON DELETE CASCADE
+            )
+          ''');
+          },
+        ),
+      );
+      final existingId = await v2Db.insert('subscriptions', {
+        'title': 'قسط وام',
+        'amount': 2000000.0,
+        'dueDate': DateTime(2026, 9, 1).toIso8601String(),
+        'repeatType': 'monthly',
+        'category': 'سایر',
+        'reminderDaysBefore': 3,
+        'isPaid': 0,
+        'lastPaidDate': null,
+      });
+      await v2Db.close();
+
+      final helper = DatabaseHelper(path: path);
+      final repository = SubscriptionRepository(databaseHelper: helper);
+
+      final subscriptions = await repository.getAll();
+      expect(subscriptions, hasLength(1));
+      expect(subscriptions.first.id, existingId);
+      expect(subscriptions.first.title, 'قسط وام');
+      // ستون جدید برای رکوردهای قدیمی باید null باشد (یعنی تکرار بی‌نهایت).
+      expect(subscriptions.first.remainingOccurrences, isNull);
+
+      await repository.update(
+        subscriptions.first.copyWith(remainingOccurrences: 12),
+      );
+      final updated = await repository.getById(existingId);
+      expect(updated!.remainingOccurrences, 12);
+
+      await helper.close();
+    },
+  );
 }

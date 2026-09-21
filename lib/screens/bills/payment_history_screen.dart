@@ -54,9 +54,9 @@ class PaymentHistoryScreen extends StatelessWidget {
                   ),
                   title: Text(
                     formatTooman(payment.amount),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   subtitle: Text(formatJalaliDate(payment.paidDate)),
                 ),

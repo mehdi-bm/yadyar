@@ -3,7 +3,22 @@ import 'package:flutter/material.dart';
 import '../../../models/subscription.dart';
 import '../../../utils/currency_formatter.dart';
 import '../../../utils/date_formatter.dart';
+import '../subscription_edit_screen.dart' show subscriptionOccurrenceUnitLabels;
 import 'bill_status.dart';
+
+const Map<String, IconData> _categoryIcons = {
+  'اینترنت': Icons.wifi,
+  'برق': Icons.bolt_outlined,
+  'آب': Icons.water_drop_outlined,
+  'گاز': Icons.local_fire_department_outlined,
+  'تلفن همراه': Icons.smartphone_outlined,
+  'اشتراک نرم‌افزار': Icons.apps_outlined,
+  'بیمه': Icons.shield_outlined,
+  'اجاره': Icons.home_outlined,
+};
+
+IconData _iconForCategory(String category) =>
+    _categoryIcons[category] ?? Icons.receipt_long_outlined;
 
 class SubscriptionCard extends StatefulWidget {
   const SubscriptionCard({
@@ -53,6 +68,20 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             children: [
               Row(
                 children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      _iconForCategory(subscription.category),
+                      size: 20,
+                      color: statusColor,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       subscription.title,
@@ -108,6 +137,18 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                           'سررسید: ${formatJalaliDate(subscription.dueDate)}',
                           style: theme.textTheme.bodySmall,
                         ),
+                        if (!subscription.isPaid &&
+                            subscription.remainingOccurrences != null &&
+                            subscription.remainingOccurrences! > 0) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            '${subscription.remainingOccurrences} '
+                            '${subscriptionOccurrenceUnitLabels[subscription.repeatType]} مانده',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

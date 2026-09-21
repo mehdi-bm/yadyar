@@ -52,7 +52,8 @@ class _ShoppingListDetailScreenState extends State<ShoppingListDetailScreen> {
           : isEmpty
           ? EmptyStateView(
               icon: Icons.playlist_add_outlined,
-              message: 'این لیست هنوز آیتمی ندارد.\nبرای شروع، دکمه + را بزنید.',
+              message:
+                  'این لیست هنوز آیتمی ندارد.\nبرای شروع، دکمه + را بزنید.',
               actionLabel: 'افزودن اولین آیتم',
               onAction: () => showAddItemSheet(context),
             )

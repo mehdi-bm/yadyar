@@ -52,18 +52,20 @@ void _paintMark(ui.Canvas canvas, double size, {required double markScale}) {
   canvas.drawPath(path, checkPaint);
 }
 
-Future<Uint8List> _renderPng(double size, {required bool withBackground}) async {
+Future<Uint8List> _renderPng(
+  double size, {
+  required bool withBackground,
+}) async {
   final recorder = ui.PictureRecorder();
   final canvas = ui.Canvas(recorder);
   final rect = ui.Rect.fromLTWH(0, 0, size, size);
 
   if (withBackground) {
     final bgPaint = ui.Paint()
-      ..shader = ui.Gradient.linear(
-        ui.Offset.zero,
-        ui.Offset(size, size),
-        [_bgStart, _bgEnd],
-      );
+      ..shader = ui.Gradient.linear(ui.Offset.zero, ui.Offset(size, size), [
+        _bgStart,
+        _bgEnd,
+      ]);
     final rrect = ui.RRect.fromRectAndRadius(
       rect,
       ui.Radius.circular(size * 0.22),

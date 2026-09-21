@@ -99,7 +99,8 @@ class _ShoppingListsScreenState extends State<ShoppingListsScreen> {
           : lists.isEmpty
           ? EmptyStateView(
               icon: Icons.shopping_cart_outlined,
-              message: 'هنوز لیست خریدی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
+              message:
+                  'هنوز لیست خریدی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
               actionLabel: 'ساخت اولین لیست خرید',
               onAction: () => _addList(context),
             )
