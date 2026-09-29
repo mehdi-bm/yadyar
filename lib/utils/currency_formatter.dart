@@ -41,3 +41,6 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     );
   }
 }
+
+/// عدد عمومی (مثلاً مقدار یک قلم خرید) با ارقام فارسی؛ اعشار صفر نمایش داده نمی‌شود.
+String formatNumber(num value) => _amountFormat.format(value);

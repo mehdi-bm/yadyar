@@ -40,6 +40,8 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
   late final TextEditingController _customCategoryController;
   late final TextEditingController _reminderDaysController;
   late final TextEditingController _occurrencesController;
+  late final TextEditingController _identifierController;
+  late final TextEditingController _noteController;
 
   late String _selectedCategory;
   late DateTime _dueDate;
@@ -64,6 +66,10 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     _occurrencesController = TextEditingController(
       text: subscription?.remainingOccurrences?.toString() ?? '',
     );
+    _identifierController = TextEditingController(
+      text: subscription?.billIdentifier ?? '',
+    );
+    _noteController = TextEditingController(text: subscription?.note ?? '');
     _dueDate =
         subscription?.dueDate ?? DateTime.now().add(const Duration(days: 30));
     _repeatType = subscription?.repeatType ?? SubscriptionRepeatType.monthly;
@@ -88,8 +94,13 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
     _customCategoryController.dispose();
     _reminderDaysController.dispose();
     _occurrencesController.dispose();
+    _identifierController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
+
+  static String? _optional(String text) =>
+      text.trim().isEmpty ? null : text.trim();
 
   Future<void> _pickDueDate() async {
     final picked = await showPersianDatePicker(
@@ -143,6 +154,8 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
           (_repeatType != SubscriptionRepeatType.once && _isLimitedRepeat)
           ? int.parse(_occurrencesController.text.trim())
           : null,
+      billIdentifier: _optional(_identifierController.text),
+      note: _optional(_noteController.text),
     );
 
     if (_isEditing) {
@@ -366,6 +379,35 @@ class _SubscriptionEditScreenState extends State<SubscriptionEditScreen> {
                         }
                         return null;
                       },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _identifierController,
+                      decoration: const InputDecoration(
+                        labelText: 'شناسه قبض (اختیاری)',
+                        helperText: 'برای کپی سریع هنگام پرداخت از درگاه‌ها',
+                        prefixIcon: Icon(Icons.tag),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _noteController,
+                      decoration: const InputDecoration(
+                        labelText: 'توضیحات (اختیاری)',
+                        hintText: 'مثلاً شماره اشتراک یا نام صاحب حساب',
+                        prefixIcon: Icon(Icons.notes_outlined),
+                      ),
+                      maxLines: null,
                     ),
                   ],
                 ),

@@ -27,6 +27,54 @@ class Reminder {
   final ReminderRepeatType repeatType;
   final bool isActive;
 
+  /// زمان رخداد بعدی از [now] به بعد (برای یادآور تکرارشونده، [dateTime] فقط
+  /// اولین رخداد است). برای یادآور بدون تکرارِ گذشته، null. قواعد با
+  /// زمان‌بندی اعلان در NotificationService یکی است (مثلاً ماه‌هایی که روز
+  /// [dateTime] را ندارند رد می‌شوند).
+  DateTime? nextOccurrence({DateTime? now}) {
+    final reference = now ?? DateTime.now();
+    var date = dateTime;
+    if (date.isAfter(reference)) return date;
+    DateTime at(int year, int month, int day) => DateTime(
+      year,
+      month,
+      day,
+      dateTime.hour,
+      dateTime.minute,
+      dateTime.second,
+    );
+    switch (repeatType) {
+      case ReminderRepeatType.none:
+        return null;
+      case ReminderRepeatType.daily:
+        do {
+          date = at(date.year, date.month, date.day + 1);
+        } while (!date.isAfter(reference));
+      case ReminderRepeatType.weekly:
+        do {
+          date = at(date.year, date.month, date.day + 7);
+        } while (!date.isAfter(reference));
+      case ReminderRepeatType.monthly:
+        do {
+          var year = date.year;
+          var month = date.month + 1;
+          if (month > 12) {
+            month = 1;
+            year++;
+          }
+          while (dateTime.day > DateTime(year, month + 1, 0).day) {
+            month++;
+            if (month > 12) {
+              month = 1;
+              year++;
+            }
+          }
+          date = at(year, month, dateTime.day);
+        } while (!date.isAfter(reference));
+    }
+    return date;
+  }
+
   Reminder copyWith({
     int? id,
     int? noteId,

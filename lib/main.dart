@@ -139,8 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
+      // extendBody عمداً false است: Scaffold هر تب باید بالای نوار ناوبری
+      // شناور تمام شود، وگرنه دکمه «+» (FAB) و انتهای لیست‌ها زیر نوار پنهان می‌شوند.
       body: tabs[_currentIndex],
-      extendBody: true,
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Container(

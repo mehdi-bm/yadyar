@@ -8,6 +8,7 @@ import 'package:yadyar_app/providers/bills_provider.dart';
 import 'package:yadyar_app/repositories/subscription_repository.dart';
 import 'package:yadyar_app/screens/bills/bills_list_screen.dart';
 import 'package:yadyar_app/screens/bills/widgets/bill_status.dart';
+import 'package:yadyar_app/screens/bills/widgets/subscription_card.dart';
 import 'package:yadyar_app/theme/app_theme.dart';
 import 'package:yadyar_app/utils/currency_formatter.dart';
 
@@ -71,7 +72,15 @@ void main() {
 
     expect(find.text(billStatusLabel(BillStatus.dueSoon)), findsOneWidget);
 
-    await tester.tap(find.text('پرداخت‌شده'));
+    // کارت خلاصه و نمودار بالای لیست هستند؛ کارت قبض ممکن است بیرون از صفحه باشد.
+
+    await tester.ensureVisible(find.text('پرداخت کردم'));
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('پرداخت کردم'));
+    // بازخورد «ثبت شد» ۴۵۰ میلی‌ثانیه پیش از ثبت واقعی پرداخت نمایش داده می‌شود.
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
 
     expect(find.text(billStatusLabel(BillStatus.paid)), findsOneWidget);
@@ -105,7 +114,13 @@ void main() {
       await tester.tap(find.byTooltip('ذخیره'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining(formatTooman(1250000)), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SubscriptionCard),
+          matching: find.text(formatTooman(1250000)),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
@@ -137,12 +152,20 @@ void main() {
       await tester.tap(find.byTooltip('ذخیره'));
       await tester.pumpAndSettle();
 
-      expect(find.text('3 ماه مانده'), findsOneWidget);
+      expect(find.text('۳ ماه مانده'), findsOneWidget);
 
-      await tester.tap(find.text('پرداخت‌شده'));
+      // کارت خلاصه و نمودار بالای لیست هستند؛ کارت قبض ممکن است بیرون از صفحه باشد.
+
+      await tester.ensureVisible(find.text('پرداخت کردم'));
+
       await tester.pumpAndSettle();
 
-      expect(find.text('2 ماه مانده'), findsOneWidget);
+      await tester.tap(find.text('پرداخت کردم'));
+      // بازخورد «ثبت شد» ۴۵۰ میلی‌ثانیه پیش از ثبت واقعی پرداخت نمایش داده می‌شود.
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('۲ ماه مانده'), findsOneWidget);
     },
   );
 }

@@ -69,6 +69,11 @@ class SubscriptionRepository {
     return maps.map(SubscriptionPayment.fromMap).toList();
   }
 
+  Future<int> deletePayment(int id) async {
+    final db = await _databaseHelper.database;
+    return db.delete(_paymentsTable, where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<SubscriptionPayment>> getAllPayments() async {
     final db = await _databaseHelper.database;
     final maps = await db.query(_paymentsTable, orderBy: 'paidDate DESC');

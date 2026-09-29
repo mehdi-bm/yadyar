@@ -5,10 +5,13 @@ import '../../constants/app_constants.dart';
 import '../../models/note.dart';
 import '../../providers/notes_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/currency_formatter.dart';
 import '../../widgets/empty_state.dart';
-import 'note_edit_screen.dart';
+import 'notes_collection_screen.dart';
 import 'widgets/note_actions.dart';
 import 'widgets/note_card.dart';
+
+enum _MoreAction { archive, trash }
 
 class NotesListScreen extends StatefulWidget {
   const NotesListScreen({super.key});
@@ -25,7 +28,10 @@ class _NotesListScreenState extends State<NotesListScreen> {
     super.initState();
     _searchController.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<NotesProvider>().loadNotes();
+      if (!mounted) return;
+      final provider = context.read<NotesProvider>();
+      provider.loadNotes();
+      provider.loadPreferences();
     });
   }
 
@@ -35,57 +41,75 @@ class _NotesListScreenState extends State<NotesListScreen> {
     super.dispose();
   }
 
-  Future<void> _openEditor(BuildContext context, {Note? note}) {
-    return Navigator.of(
-      context,
-    ).push<void>(MaterialPageRoute(builder: (_) => NoteEditScreen(note: note)));
-  }
-
-  Future<void> _handleLongPress(BuildContext context, Note note) async {
-    final provider = context.read<NotesProvider>();
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('ویرایش'),
-              onTap: () => Navigator.of(ctx).pop('edit'),
-            ),
-            ListTile(
-              leading: Icon(
-                note.isPinned ? Icons.push_pin_outlined : Icons.push_pin,
-              ),
-              title: Text(note.isPinned ? 'لغو سنجاق' : 'سنجاق کردن'),
-              onTap: () => Navigator.of(ctx).pop('pin'),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(ctx).colorScheme.error,
-              ),
-              title: Text(
-                'حذف',
-                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-              ),
-              onTap: () => Navigator.of(ctx).pop('delete'),
-            ),
-          ],
-        ),
+  void _openCollection(NotesCollection collection) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => NotesCollectionScreen(collection: collection),
       ),
     );
+  }
 
-    if (!context.mounted || action == null) return;
-    switch (action) {
-      case 'edit':
-        await _openEditor(context, note: note);
-      case 'pin':
-        await provider.togglePin(note);
-      case 'delete':
-        final confirmed = await showDeleteNoteConfirmation(context);
-        if (confirmed) await provider.deleteNote(note.id!);
-    }
+  Widget _buildCard(NotesProvider provider, Note note, {bool compact = false}) {
+    return NoteCard(
+      key: ValueKey('note-card-${note.id}'),
+      note: note,
+      reminder: provider.reminderForNote(note.id!),
+      nextReminder: provider.nextReminderFor(note.id),
+      compact: compact,
+      onTap: () => openNoteEditor(context, note: note),
+      onLongPress: () => showNoteActionsSheet(context, note),
+    );
+  }
+
+  /// در نمای لیستی: کشیدن به یک سو بایگانی، به سوی دیگر حذف (با بازگردانی).
+  Widget _swipeable(NotesProvider provider, Note note) {
+    final scheme = Theme.of(context).colorScheme;
+    Widget background(IconData icon, String label, Color color, bool start) =>
+        Container(
+          alignment: start
+              ? AlignmentDirectional.centerStart
+              : AlignmentDirectional.centerEnd,
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          color: color,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    return Dismissible(
+      key: ValueKey('note-${note.id}'),
+      background: background(
+        Icons.archive_outlined,
+        'بایگانی',
+        scheme.primary,
+        true,
+      ),
+      secondaryBackground: background(
+        Icons.delete_outline,
+        'حذف',
+        scheme.error,
+        false,
+      ),
+      onDismissed: (direction) {
+        if (direction == DismissDirection.startToEnd) {
+          archiveNoteWithUndo(context, note);
+        } else {
+          trashNoteWithUndo(context, note);
+        }
+      },
+      child: _buildCard(provider, note),
+    );
   }
 
   @override
@@ -94,12 +118,26 @@ class _NotesListScreenState extends State<NotesListScreen> {
     final notes = provider.filteredNotes;
     final tags = provider.allTags;
     final isFiltering =
-        provider.searchQuery.isNotEmpty || provider.selectedTag != null;
+        provider.searchQuery.isNotEmpty ||
+        provider.selectedTag != null ||
+        provider.onlyWithReminder;
+    final pinned = notes.where((note) => note.isPinned).toList();
+    final others = notes.where((note) => !note.isPinned).toList();
+    final showSections = pinned.isNotEmpty && others.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConstants.appName),
         actions: [
+          IconButton(
+            icon: Icon(
+              provider.isGridView
+                  ? Icons.view_agenda_outlined
+                  : Icons.grid_view_outlined,
+            ),
+            tooltip: provider.isGridView ? 'نمای لیستی' : 'نمای شبکه‌ای',
+            onPressed: provider.toggleGridView,
+          ),
           PopupMenuButton<NoteSortOption>(
             icon: const Icon(Icons.sort),
             tooltip: 'مرتب‌سازی',
@@ -122,6 +160,36 @@ class _NotesListScreenState extends State<NotesListScreen> {
                   ),
                 )
                 .toList(),
+          ),
+          PopupMenuButton<_MoreAction>(
+            tooltip: 'گزینه‌های بیشتر',
+            onSelected: (action) => _openCollection(
+              action == _MoreAction.archive
+                  ? NotesCollection.archived
+                  : NotesCollection.trash,
+            ),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _MoreAction.archive,
+                child: Row(
+                  children: [
+                    const Icon(Icons.archive_outlined, size: 20),
+                    const SizedBox(width: 12),
+                    Text('بایگانی (${formatNumber(provider.archivedCount)})'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _MoreAction.trash,
+                child: Row(
+                  children: [
+                    const Icon(Icons.restore_from_trash_outlined, size: 20),
+                    const SizedBox(width: 12),
+                    Text('حذف‌شده‌ها (${formatNumber(provider.trashCount)})'),
+                  ],
+                ),
+              ),
+            ],
           ),
           const ThemeModeButton(),
         ],
@@ -152,34 +220,48 @@ class _NotesListScreenState extends State<NotesListScreen> {
               onChanged: provider.setSearchQuery,
             ),
           ),
-          if (tags.isNotEmpty)
+          if (tags.isNotEmpty || provider.withReminderCount > 0)
             SizedBox(
-              height: 44,
-              child: ListView.separated(
+              height: 48,
+              child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: tags.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, index) {
-                  if (index == 0) {
-                    return FilterChip(
-                      label: const Text('همه'),
-                      selected: provider.selectedTag == null,
-                      onSelected: (_) => provider.setTagFilter(null),
-                    );
-                  }
-                  final tag = tags[index - 1];
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: provider.selectedTag == tag,
-                    onSelected: (_) => provider.setTagFilter(tag),
-                  );
-                },
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                children: [
+                  _chip(
+                    label: 'همه',
+                    selected:
+                        provider.selectedTag == null &&
+                        !provider.onlyWithReminder,
+                    onSelected: () {
+                      if (provider.onlyWithReminder) {
+                        provider.toggleReminderFilter();
+                      }
+                      provider.setTagFilter(null);
+                    },
+                  ),
+                  if (provider.withReminderCount > 0)
+                    _chip(
+                      label:
+                          'یادآوردار (${formatNumber(provider.withReminderCount)})',
+                      icon: Icons.notifications_active_outlined,
+                      selected: provider.onlyWithReminder,
+                      onSelected: provider.toggleReminderFilter,
+                    ),
+                  for (final tag in tags)
+                    _chip(
+                      label: '#$tag',
+                      selected: provider.selectedTag == tag,
+                      onSelected: () => provider.setTagFilter(tag),
+                    ),
+                ],
               ),
             ),
           const SizedBox(height: 4),
           Expanded(
-            child: provider.isLoading
+            child: provider.isLoading && notes.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : notes.isEmpty
                 ? EmptyStateView(
@@ -188,28 +270,110 @@ class _NotesListScreenState extends State<NotesListScreen> {
                         ? 'یادداشتی با این مشخصات پیدا نشد.'
                         : 'هنوز یادداشتی ثبت نشده است.\nبرای شروع، دکمه + را بزنید.',
                     actionLabel: isFiltering ? null : 'افزودن اولین یادداشت',
-                    onAction: isFiltering ? null : () => _openEditor(context),
+                    onAction: isFiltering
+                        ? null
+                        : () => openNoteEditor(context),
                   )
-                : ListView.builder(
+                : ListView(
                     padding: const EdgeInsets.only(bottom: 88),
-                    itemCount: notes.length,
-                    itemBuilder: (context, index) {
-                      final note = notes[index];
-                      return NoteCard(
-                        note: note,
-                        reminder: provider.reminderForNote(note.id!),
-                        onTap: () => _openEditor(context, note: note),
-                        onLongPress: () => _handleLongPress(context, note),
-                      );
-                    },
+                    children: [
+                      if (showSections)
+                        const _SectionTitle(
+                          icon: Icons.push_pin_outlined,
+                          title: 'سنجاق‌شده',
+                        ),
+                      ..._notesBlock(provider, showSections ? pinned : notes),
+                      if (showSections) ...[
+                        const _SectionTitle(
+                          icon: Icons.notes_outlined,
+                          title: 'سایر یادداشت‌ها',
+                        ),
+                        ..._notesBlock(provider, others),
+                      ],
+                    ],
                   ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(context),
+        onPressed: () => openNoteEditor(context),
         tooltip: 'یادداشت جدید',
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  List<Widget> _notesBlock(NotesProvider provider, List<Note> notes) {
+    if (!provider.isGridView) {
+      return [for (final note in notes) _swipeable(provider, note)];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth > 700 ? 3 : 2;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var column = 0; column < columns; column++)
+                  Expanded(
+                    child: Column(
+                      children: [
+                        for (var i = column; i < notes.length; i += columns)
+                          _buildCard(provider, notes[i], compact: true),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    ];
+  }
+
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required VoidCallback onSelected,
+    IconData? icon,
+  }) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: FilterChip(
+        avatar: icon == null ? null : Icon(icon, size: 16),
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onSelected(),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.icon, required this.title});
+
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

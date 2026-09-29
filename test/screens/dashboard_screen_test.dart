@@ -94,10 +94,22 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('یادداشت با یادآور امروز'), findsOneWidget);
-      expect(find.text('قبض برق خانه'), findsOneWidget);
       // خلاصه بالای صفحه: ۱ یادآور امروز، ۱ قبض معوق و ۱ آیتم خرید باقی‌مانده.
-      expect(find.text('1'), findsNWidgets(3));
+      expect(find.text('۱'), findsNWidgets(3));
+
+      // میان‌برها و کارت مالی بالای بخش‌ها هستند؛ برای دیدن هر بخش اسکرول می‌کنیم.
+      await tester.dragUntilVisible(
+        find.text('یادداشت با یادآور امروز'),
+        find.byType(ListView).first,
+        const Offset(0, -200),
+      );
+      expect(find.text('یادداشت با یادآور امروز'), findsOneWidget);
+      await tester.dragUntilVisible(
+        find.text('قبض برق خانه'),
+        find.byType(ListView).first,
+        const Offset(0, -200),
+      );
+      expect(find.text('قبض برق خانه'), findsOneWidget);
 
       // بخش خرید در انتهای صفحه است؛ محتوای بیشتر بالای آن (سرآمد
       // خوش‌آمدگویی، کارت‌های بزرگ‌تر) ممکن است آن را بیرون از ناحیه
@@ -144,5 +156,69 @@ void main() {
     expect(find.byType(SupportScreen), findsOneWidget);
     expect(find.text('ارسال گزارش خطا'), findsWidgets);
     expect(find.text('درخواست تبلیغ'), findsWidgets);
+  });
+
+  testWidgets('shows quick actions, the finance card and pinned notes', (
+    tester,
+  ) async {
+    final noteRepo = NoteRepository(databaseHelper: databaseHelper);
+    final subscriptionRepo = SubscriptionRepository(
+      databaseHelper: databaseHelper,
+    );
+    final now = DateTime.now();
+    await noteRepo.insert(
+      Note(
+        title: 'رمز وای‌فای',
+        content: 'یادداشت سنجاق‌شده',
+        tag: '',
+        isPinned: true,
+        createdAt: now,
+        updatedAt: now,
+        colorValue: 0xFF42A5F5,
+      ),
+    );
+    await subscriptionRepo.insert(
+      Subscription(
+        title: 'اینترنت',
+        amount: 250000,
+        dueDate: now.add(const Duration(days: 2)),
+        category: 'اینترنت',
+      ),
+    );
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => ThemeController(),
+        child: MaterialApp(
+          theme: AppTheme.light,
+          home: DashboardScreen(
+            onNavigateToTab: (_) {},
+            noteRepository: noteRepo,
+            reminderRepository: ReminderRepository(
+              databaseHelper: databaseHelper,
+            ),
+            subscriptionRepository: subscriptionRepo,
+            shoppingRepository: ShoppingListRepository(
+              databaseHelper: databaseHelper,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    for (final label in ['یادداشت', 'یادآور', 'قبض', 'لیست خرید']) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(find.textContaining('وضعیت مالی'), findsOneWidget);
+    expect(find.text('امروز ۱ قبض عقب‌افتاده دارید'), findsNothing);
+
+    await tester.dragUntilVisible(
+      find.text('رمز وای‌فای'),
+      find.byType(ListView).first,
+      const Offset(0, -200),
+    );
+    expect(find.text('رمز وای‌فای'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

@@ -19,6 +19,8 @@ class Subscription {
     this.isPaid = false,
     this.lastPaidDate,
     this.remainingOccurrences,
+    this.billIdentifier,
+    this.note,
   });
 
   final int? id;
@@ -37,6 +39,12 @@ class Subscription {
   /// تکرار بی‌نهایت است؛ برای repeatType == once همیشه بی‌معنی و null است.
   final int? remainingOccurrences;
 
+  /// شناسه قبض (مثلاً برای پرداخت از درگاه‌ها)؛ اختیاری.
+  final String? billIdentifier;
+
+  /// توضیحات آزاد (شماره اشتراک، نام حساب و...)؛ اختیاری.
+  final String? note;
+
   Subscription copyWith({
     int? id,
     String? title,
@@ -49,6 +57,8 @@ class Subscription {
     DateTime? lastPaidDate,
     int? remainingOccurrences,
     bool clearRemainingOccurrences = false,
+    String? billIdentifier,
+    String? note,
   }) {
     return Subscription(
       id: id ?? this.id,
@@ -63,6 +73,8 @@ class Subscription {
       remainingOccurrences: clearRemainingOccurrences
           ? null
           : (remainingOccurrences ?? this.remainingOccurrences),
+      billIdentifier: billIdentifier ?? this.billIdentifier,
+      note: note ?? this.note,
     );
   }
 
@@ -78,6 +90,8 @@ class Subscription {
       'isPaid': isPaid ? 1 : 0,
       'lastPaidDate': lastPaidDate?.toIso8601String(),
       'remainingOccurrences': remainingOccurrences,
+      'billIdentifier': billIdentifier,
+      'note': note,
     };
   }
 
@@ -95,6 +109,8 @@ class Subscription {
           ? DateTime.parse(map['lastPaidDate'] as String)
           : null,
       remainingOccurrences: map['remainingOccurrences'] as int?,
+      billIdentifier: map['billIdentifier'] as String?,
+      note: map['note'] as String?,
     );
   }
 }

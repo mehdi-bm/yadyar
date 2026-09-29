@@ -19,6 +19,8 @@ import 'package:yadyar_app/repositories/subscription_repository.dart';
 import 'package:yadyar_app/screens/bills/bills_list_screen.dart';
 import 'package:yadyar_app/screens/dashboard_screen.dart';
 import 'package:yadyar_app/screens/notes/notes_list_screen.dart';
+import 'package:yadyar_app/screens/shopping/shopping_categories_screen.dart';
+import 'package:yadyar_app/screens/shopping/shopping_list_detail_screen.dart';
 import 'package:yadyar_app/screens/shopping/shopping_lists_screen.dart';
 import 'package:yadyar_app/theme/app_theme.dart';
 
@@ -35,6 +37,7 @@ void main() {
   });
 
   late DatabaseHelper databaseHelper;
+  late int shoppingListId;
 
   setUp(() {
     databaseHelper = DatabaseHelper(path: inMemoryDatabasePath);
@@ -93,10 +96,30 @@ void main() {
         shoppingListId: listId,
         name: 'یک نام آیتم نسبتاً طولانی برای بررسی سرریز',
         category: 'میوه و سبزیجات',
+        // متن آزاد قدیمی (پیش از فیلد واحد) باید همچنان درست نمایش داده شود.
         quantity: '۲ کیلوگرم',
+        price: 125000,
+        note: 'یک توضیح نسبتاً طولانی درباره برند و مدل مورد نظر برای خرید',
+        isImportant: true,
       ),
     );
+    await shoppingRepo.insertItem(
+      ShoppingItem(
+        shoppingListId: listId,
+        name: 'شیر کم‌چرب',
+        category: 'لبنیات',
+        quantity: '3',
+        unit: 'بطری',
+        price: 1234567,
+        isChecked: true,
+      ),
+    );
+    shoppingListId = listId;
   }
+
+  ShoppingProvider shoppingProvider() => ShoppingProvider(
+    repository: ShoppingListRepository(databaseHelper: databaseHelper),
+  );
 
   Future<void> pumpAtSize(
     WidgetTester tester,
@@ -244,6 +267,45 @@ void main() {
                 ),
               )..loadLists(),
             ),
+          ],
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('ShoppingListDetailScreen renders without overflow', (
+        tester,
+      ) async {
+        await seedRealisticData();
+        await pumpAtSize(
+          tester,
+          size,
+          ShoppingListDetailScreen(
+            shoppingList: ShoppingList(
+              id: shoppingListId,
+              name: 'خرید هفتگی خانواده با یک نام نسبتاً بلند',
+              createdAt: DateTime.now(),
+            ),
+          ),
+          extraProviders: [
+            ChangeNotifierProvider(create: (_) => shoppingProvider()),
+          ],
+        );
+        expect(
+          find.text('یک نام آیتم نسبتاً طولانی برای بررسی سرریز'),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('ShoppingCategoriesScreen renders without overflow', (
+        tester,
+      ) async {
+        await pumpAtSize(
+          tester,
+          size,
+          const ShoppingCategoriesScreen(),
+          extraProviders: [
+            ChangeNotifierProvider(create: (_) => shoppingProvider()),
           ],
         );
         expect(tester.takeException(), isNull);

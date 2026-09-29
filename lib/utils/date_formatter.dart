@@ -46,3 +46,33 @@ String formatJalaliLong(DateTime dateTime) {
   final month = _jalaliMonthNames[jalali.month - 1];
   return '$weekDay، ${jalali.day} $month';
 }
+
+/// ارقام لاتین داخل متن را به ارقام فارسی تبدیل می‌کند.
+String _persianize(String text) {
+  const digits = '۰۱۲۳۴۵۶۷۸۹';
+  return text.replaceAllMapped(
+    RegExp('[0-9]'),
+    (match) => digits[int.parse(match[0]!)],
+  );
+}
+
+/// فاصله تا یک زمان آینده به‌صورت خوانا، مثل «۱۵ دقیقه دیگر»، «۳ ساعت دیگر»،
+/// «فردا ۰۹:۳۰» یا «۴ روز دیگر»؛ برای زمان گذشته «گذشته».
+String relativeFutureLabel(DateTime target, {DateTime? now}) {
+  final reference = now ?? DateTime.now();
+  final diff = target.difference(reference);
+  if (diff.isNegative) return 'گذشته';
+  if (diff.inMinutes < 1) return 'همین حالا';
+  if (diff.inMinutes < 60) return _persianize('${diff.inMinutes} دقیقه دیگر');
+  // UTC: فاصله روزها با تغییر ساعت تابستانی اشتباه نمی‌شود.
+  final dayDiff = DateTime.utc(target.year, target.month, target.day)
+      .difference(DateTime.utc(reference.year, reference.month, reference.day))
+      .inDays;
+  if (dayDiff == 0) return _persianize('${diff.inHours} ساعت دیگر');
+  if (dayDiff == 1) {
+    final hh = target.hour.toString().padLeft(2, '0');
+    final mm = target.minute.toString().padLeft(2, '0');
+    return _persianize('فردا $hh:$mm');
+  }
+  return _persianize('$dayDiff روز دیگر');
+}

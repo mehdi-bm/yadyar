@@ -4,14 +4,22 @@ import 'package:provider/provider.dart';
 import '../../models/note.dart';
 import '../../models/reminder.dart';
 import '../../providers/notes_provider.dart';
+import '../../utils/currency_formatter.dart';
+import '../../utils/date_formatter.dart';
+import '../../widgets/palette_color_picker.dart';
 import 'widgets/note_actions.dart';
 import 'widgets/reminder_form_section.dart';
 
+enum _EditorAction { share, copy, archive, delete }
+
 class NoteEditScreen extends StatefulWidget {
-  const NoteEditScreen({super.key, this.note});
+  const NoteEditScreen({super.key, this.note, this.startWithReminder = false});
 
   /// اگر null باشد، فرم در حالت «افزودن یادداشت جدید» است.
   final Note? note;
+
+  /// برای یادداشت جدید: بخش یادآور از ابتدا روشن باشد (میان‌بر «یادآور جدید»).
+  final bool startWithReminder;
 
   @override
   State<NoteEditScreen> createState() => _NoteEditScreenState();
@@ -23,6 +31,7 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   late final TextEditingController _contentController;
   late final TextEditingController _tagController;
   late bool _isPinned;
+  int? _colorValue;
 
   bool _reminderEnabled = false;
   DateTime _reminderDateTime = DateTime.now().add(const Duration(hours: 1));
@@ -36,8 +45,11 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
     final note = widget.note;
     _titleController = TextEditingController(text: note?.title ?? '');
     _contentController = TextEditingController(text: note?.content ?? '');
+    _contentController.addListener(() => setState(() {}));
     _tagController = TextEditingController(text: note?.tag ?? '');
     _isPinned = note?.isPinned ?? false;
+    _colorValue = note?.colorValue;
+    _reminderEnabled = note == null && widget.startWithReminder;
 
     if (note?.id != null) {
       context.read<NotesProvider>().getReminderForNote(note!.id!).then((
@@ -81,6 +93,8 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
           content: _contentController.text.trim(),
           tag: _tagController.text.trim(),
           isPinned: _isPinned,
+          colorValue: _colorValue,
+          clearColor: _colorValue == null,
         ),
         reminder: reminder,
       );
@@ -91,35 +105,86 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
         tag: _tagController.text.trim(),
         isPinned: _isPinned,
         reminder: reminder,
+        colorValue: _colorValue,
       );
     }
 
     if (mounted) Navigator.of(context).pop();
   }
 
-  Future<void> _delete() async {
-    final confirmed = await showDeleteNoteConfirmation(context);
-    if (!confirmed || !mounted) return;
-    await context.read<NotesProvider>().deleteNote(widget.note!.id!);
-    if (mounted) Navigator.of(context).pop();
+  Future<void> _onAction(_EditorAction action) async {
+    final note = widget.note!;
+    switch (action) {
+      case _EditorAction.share:
+        await runNoteAction(context, note, NoteAction.share);
+      case _EditorAction.copy:
+        await runNoteAction(context, note, NoteAction.copy);
+      case _EditorAction.archive:
+        final navigator = Navigator.of(context);
+        await runNoteAction(context, note, NoteAction.archive);
+        navigator.pop();
+      case _EditorAction.delete:
+        final navigator = Navigator.of(context);
+        await trashNoteWithUndo(context, note);
+        navigator.pop();
+    }
+  }
+
+  PopupMenuItem<_EditorAction> _menuItem(
+    _EditorAction value,
+    IconData icon,
+    String label, {
+    Color? color,
+  }) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: color)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final existingTags = context.watch<NotesProvider>().allTags;
+    final theme = Theme.of(context);
+    final content = _contentController.text.trim();
+    final words = content.isEmpty ? 0 : content.split(RegExp(r'\s+')).length;
+    final isArchived = widget.note?.isArchived ?? false;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'ویرایش یادداشت' : 'یادداشت جدید'),
         actions: [
           if (_isEditing)
-            IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              tooltip: 'حذف یادداشت',
-              onPressed: _delete,
+            PopupMenuButton<_EditorAction>(
+              tooltip: 'گزینه‌های بیشتر',
+              onSelected: _onAction,
+              itemBuilder: (context) => [
+                _menuItem(
+                  _EditorAction.share,
+                  Icons.share_outlined,
+                  'اشتراک‌گذاری',
+                ),
+                _menuItem(_EditorAction.copy, Icons.copy_outlined, 'کپی متن'),
+                _menuItem(
+                  _EditorAction.archive,
+                  isArchived
+                      ? Icons.unarchive_outlined
+                      : Icons.archive_outlined,
+                  isArchived ? 'خروج از بایگانی' : 'بایگانی',
+                ),
+                _menuItem(
+                  _EditorAction.delete,
+                  Icons.delete_outline,
+                  'حذف یادداشت',
+                  color: theme.colorScheme.error,
+                ),
+              ],
             ),
           IconButton.filled(
             icon: const Icon(Icons.check),
@@ -159,8 +224,27 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                         alignLabelWithHint: true,
                       ),
                       minLines: 5,
-                      maxLines: 12,
+                      maxLines: 14,
                       textAlignVertical: TextAlignVertical.top,
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          '${formatNumber(words)} کلمه • ${formatNumber(content.length)} نویسه',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (_isEditing)
+                          Text(
+                            'ویرایش: ${formatJalaliDateTime(widget.note!.updatedAt)}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.outline,
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 14),
                     TextFormField(
@@ -195,6 +279,24 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
                       secondary: const Icon(Icons.push_pin_outlined),
                       value: _isPinned,
                       onChanged: (value) => setState(() => _isPinned = value),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('رنگ یادداشت', style: theme.textTheme.labelLarge),
+                    const SizedBox(height: 10),
+                    PaletteColorPicker(
+                      selected: _colorValue,
+                      allowNone: true,
+                      onChanged: (value) => setState(() => _colorValue = value),
                     ),
                   ],
                 ),
